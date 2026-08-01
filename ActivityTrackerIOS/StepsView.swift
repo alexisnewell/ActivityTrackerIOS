@@ -24,18 +24,32 @@ import CoreMotion
 struct StepsView: View {
 
     @StateObject private var motion = MotionTracker()
-
-    var body: some View {
-        VStack(spacing: 12) {
-            titleView
-            stepsView
-            orientationView
-            resetButton
-            Spacer()
+    private var historyButton: some View {
+        NavigationLink {
+            StepHistoryView()
+        } label: {
+            Label("Step History", systemImage: "clock.arrow.circlepath")
         }
-        .padding()
-        .onAppear { motion.start() }
-        .onDisappear { motion.stop() }
+        .buttonStyle(.borderedProminent)
+    }
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 12) {
+                titleView
+                stepsView
+                orientationView
+                resetButton
+                historyButton
+                Spacer()
+            }
+            .padding()
+            .onAppear {
+                motion.start()
+            }
+            .onDisappear {
+                motion.stop()
+            }
+        }
     }
 
     private var titleView: some View {
