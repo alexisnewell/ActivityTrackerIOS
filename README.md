@@ -17,7 +17,6 @@
 
 
 # ActivityTrackerIOS
-Activity Tracker iOS
 
 iOS Fitness App (Swift, SwiftUI)
 
