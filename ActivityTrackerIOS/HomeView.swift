@@ -1,9 +1,14 @@
 import SwiftUI
-
-/// SwiftUI equivalent of HomeActivity.java + activity_home.xml.
+import SwiftData
 
 struct HomeView: View {
     @Binding var selectedTab: AppTab
+
+    @State private var workouts: [Workout] = []
+    private let storageKey = "workout_list"
+
+    @Query(sort: \DailySteps.date, order: .reverse)
+    private var stepHistory: [DailySteps]
 
     var body: some View {
         VStack(spacing: 24) {
@@ -21,12 +26,15 @@ struct HomeView: View {
                 systemFallback: "dumbbell",
                 tab: .workouts
             )
+            ExportButton(workouts: workouts, stepHistory: stepHistory)
+                .foregroundColor(.white)
             Spacer()
         }
         .padding(.top, 64)
         .padding(.horizontal, 32)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black.opacity(0.92))
+        .onAppear(perform: loadWorkouts)
     }
 
     private var titleView: some View {
@@ -59,6 +67,7 @@ struct HomeView: View {
         }
         .buttonStyle(.plain)
     }
+
     @ViewBuilder
     private func logoImage(named assetName: String, systemFallback: String) -> some View {
         if UIImage(named: assetName) != nil {
@@ -72,6 +81,14 @@ struct HomeView: View {
                 .aspectRatio(contentMode: .fit)
                 .foregroundColor(.white)
         }
+    }
+
+    private func loadWorkouts() {
+        guard let data = UserDefaults.standard.data(forKey: storageKey),
+              let decoded = try? JSONDecoder().decode([Workout].self, from: data) else {
+            return
+        }
+        workouts = decoded
     }
 }
 

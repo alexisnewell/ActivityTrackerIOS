@@ -13,5 +13,6 @@ struct ActivityTrackerIOSApp: App {
         WindowGroup {
             RootView()
         }
+        .modelContainer(for: DailySteps.self)
     }
 }

@@ -7,19 +7,14 @@
 
 import SwiftUI
 import CoreMotion
+import SwiftData
 
 /// SwiftUI equivalent of MainActivity.java.
 struct StepsView: View {
 
     @StateObject private var motion = MotionTracker()
-    private var historyButton: some View {
-        NavigationLink {
-            StepHistoryView()
-        } label: {
-            Label("Step History", systemImage: "clock.arrow.circlepath")
-        }
-        .buttonStyle(.borderedProminent)
-    }
+    @Environment(\.modelContext) private var context
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 12) {
@@ -36,6 +31,7 @@ struct StepsView: View {
             }
             .onDisappear {
                 motion.stop()
+                saveTodaySteps()
             }
         }
     }
@@ -76,6 +72,30 @@ struct StepsView: View {
             motion.resetSteps()
         }
         .buttonStyle(.bordered)
+    }
+
+    private var historyButton: some View {
+        NavigationLink {
+            StepHistoryView()
+        } label: {
+            Label("Step History", systemImage: "clock.arrow.circlepath")
+        }
+        .buttonStyle(.borderedProminent)
+    }
+    /// Persists (or updates) today's step count into SwiftData so it shows up
+    /// in Step History and can be exported. Called whenever the user leaves this screen.
+    private func saveTodaySteps() {
+        let today = Calendar.current.startOfDay(for: Date())
+        let descriptor = FetchDescriptor<DailySteps>(
+            predicate: #Predicate { $0.date == today }
+        )
+        if let existing = try? context.fetch(descriptor).first {
+            existing.steps = motion.steps
+        } else {
+            let entry = DailySteps(date: today, steps: motion.steps)
+            context.insert(entry)
+        }
+        try? context.save()
     }
 }
 

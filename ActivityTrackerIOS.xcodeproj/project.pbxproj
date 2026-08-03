@@ -399,6 +399,7 @@
 				CODE_SIGN_ENTITLEMENTS = ActivityTrackerIOS/ActivityTrackerIOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5FBK25MRC6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMotionUsageDescription = "Activity Tracker uses motion data to count your steps.";
@@ -439,6 +440,7 @@
 				CODE_SIGN_ENTITLEMENTS = ActivityTrackerIOS/ActivityTrackerIOS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5FBK25MRC6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMotionUsageDescription = "Activity Tracker uses motion data to count your steps.";
