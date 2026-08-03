@@ -2,7 +2,6 @@
   <tr>
     <td>
 <img width="421" height="820" alt="Screenshot 2026-08-03 at 2 50 58 PM" src="https://github.com/user-attachments/assets/19ab7df5-4f7c-48d8-86f4-0b38f8849751" />
-
     </td>
     <td>
 <img width="420" height="810" alt="Screenshot 2026-08-01 at 4 24 33 PM" src="https://github.com/user-attachments/assets/32d9c3d5-9bfd-479c-88e2-fed96237bb69" />
