@@ -1,3 +1,11 @@
+//
+//  PersonalRecordsView.swift
+//  ActivityTrackerIOS
+//
+//  Created by Alexis Newell on 2026-08-03.
+//
+
+
 import SwiftUI
 
 struct PersonalRecordsView: View {

@@ -1,3 +1,10 @@
+//
+//  WorkoutHistoryView.swift
+//  ActivityTrackerIOS
+//
+//  Created by Alexis Newell on 2026-08-03.
+//
+
 import SwiftUI
 
 struct WorkoutHistoryView: View {
@@ -22,18 +29,7 @@ struct WorkoutHistoryView: View {
                     ForEach(groupedByDay, id: \.day) { section in
                         Section(section.day.formatted(date: .abbreviated, time: .omitted)) {
                             ForEach(section.workouts) { workout in
-                                HStack {
-                                    VStack(alignment: .leading) {
-                                        Text(workout.exerciseName).font(.headline)
-                                        Text(workout.details)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                    Spacer()
-                                    Text(workout.date.formatted(date: .omitted, time: .shortened))
-                                        .font(.caption2)
-                                        .foregroundColor(.tertiary)
-                                }
+                                workoutRow(workout)
                             }
                         }
                     }
@@ -42,5 +38,27 @@ struct WorkoutHistoryView: View {
             }
         }
         .navigationTitle("History")
+    }
+
+    private func workoutRow(_ workout: Workout) -> some View {
+        HStack {
+            VStack(alignment: .leading) {
+                Text(workout.exerciseName).font(.headline)
+                Text(workout.details)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+            Text(workout.date.formatted(date: .omitted, time: .shortened))
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+#Preview {
+    NavigationStack {
+        WorkoutHistoryView(workouts: [])
     }
 }

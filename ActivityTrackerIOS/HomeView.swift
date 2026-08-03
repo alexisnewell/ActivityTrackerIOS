@@ -1,10 +1,7 @@
 import SwiftUI
 
 /// SwiftUI equivalent of HomeActivity.java + activity_home.xml.
-///
-/// Card taps switch tabs instead of firing an Intent — that's handled via
-/// the `selectedTab` binding passed down from RootView, since SwiftUI's
-/// TabView owns navigation centrally rather than each screen managing its own.
+
 struct HomeView: View {
     @Binding var selectedTab: AppTab
 
@@ -14,8 +11,8 @@ struct HomeView: View {
             subtitleView
             homeCard(
                 title: "Steps",
-                iconName: "step_logo",          // swap to your own asset name
-                systemFallback: "figure.walk", // used only if the custom asset isn't found
+                iconName: "step_logo",
+                systemFallback: "figure.walk",
                 tab: .steps
             )
             homeCard(
@@ -44,7 +41,6 @@ struct HomeView: View {
             .foregroundColor(.gray)
     }
 
-    /// One reusable card, matching cardSteps / cardWorkouts from activity_home.xml.
     private func homeCard(title: String, iconName: String, systemFallback: String, tab: AppTab) -> some View {
         Button {
             selectedTab = tab
@@ -63,10 +59,6 @@ struct HomeView: View {
         }
         .buttonStyle(.plain)
     }
-
-    /// Looks for a custom image in Assets.xcassets first; falls back to an
-    /// SF Symbol if you haven't added that asset yet, so the app never
-    /// shows a blank/missing icon while you're still adding your own logos.
     @ViewBuilder
     private func logoImage(named assetName: String, systemFallback: String) -> some View {
         if UIImage(named: assetName) != nil {

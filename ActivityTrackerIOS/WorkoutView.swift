@@ -3,29 +3,48 @@ import SwiftUI
 struct WorkoutView: View {
 
     @State private var workouts: [Workout] = []
-
-    // Add-form fields
     @State private var name = ""
     @State private var setsText = ""
     @State private var repsText = ""
     @State private var weightText = ""
-
     @State private var nameError: String?
     @State private var setsError: String?
     @State private var repsError: String?
     @State private var weightError: String?
-
     @State private var showInvalidNumberAlert = false
-
-    // Delete confirmation state — replaces the AlertDialog in WorkoutAdapter's delete button
     @State private var workoutPendingDelete: Workout?
-
-    // Edit sheet state — replaces the dialog_edit_workout AlertDialog
     @State private var workoutBeingEdited: Workout?
+    @State private var showPRBanner = false
+    @State private var prBannerMessage = ""
 
     private let storageKey = "workout_list"
 
     var body: some View {
+        NavigationStack {
+            mainContent
+                .padding()
+                .onAppear(perform: loadWorkouts)
+                .modifier(WorkoutAlerts(
+                    showInvalidNumberAlert: $showInvalidNumberAlert,
+                    workoutPendingDelete: $workoutPendingDelete,
+                    showPRBanner: $showPRBanner,
+                    prBannerMessage: prBannerMessage,
+                    onConfirmDelete: confirmDelete
+                ))
+                .sheet(item: $workoutBeingEdited) { workout in
+                    EditWorkoutSheet(workout: workout) { updated in
+                        saveEdit(updated)
+                    }
+                }
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        navMenu
+                    }
+                }
+        }
+    }
+
+    private var mainContent: some View {
         VStack(spacing: 12) {
             titleView
             formView
@@ -33,33 +52,20 @@ struct WorkoutView: View {
             listOrEmptyState
             Spacer()
         }
-        .padding()
-        .onAppear(perform: loadWorkouts)
-        .alert("Please enter valid numbers.", isPresented: $showInvalidNumberAlert) {
-            Button("OK", role: .cancel) {}
-        }
-        // Delete confirmation — mirrors "Delete Workout / Are you sure?" AlertDialog
-        .alert(
-            "Delete Workout",
-            isPresented: Binding(
-                get: { workoutPendingDelete != nil },
-                set: { if !$0 { workoutPendingDelete = nil } }
-            )
-        ) {
-            Button("Cancel", role: .cancel) { workoutPendingDelete = nil }
-            Button("Delete", role: .destructive) { confirmDelete() }
-        } message: {
-            Text("Are you sure you want to delete this workout?")
-        }
-        // Edit sheet — mirrors dialog_edit_workout
-        .sheet(item: $workoutBeingEdited) { workout in
-            EditWorkoutSheet(workout: workout) { updated in
-                saveEdit(updated)
-            }
-        }
     }
 
-    // MARK: - Subviews
+    private var navMenu: some View {
+        Menu {
+            NavigationLink("History") {
+                WorkoutHistoryView(workouts: workouts)
+            }
+            NavigationLink("Personal Records") {
+                PersonalRecordsView(workouts: workouts)
+            }
+        } label: {
+            Image(systemName: "chart.bar")
+        }
+    }
 
     private var titleView: some View {
         Text("Workout Tracker")
@@ -119,7 +125,6 @@ struct WorkoutView: View {
         }
     }
 
-    /// Replaces WorkoutViewHolder's bound row + its Edit/Delete buttons.
     private func workoutRow(_ workout: Workout) -> some View {
         HStack {
             VStack(alignment: .leading) {
@@ -149,8 +154,6 @@ struct WorkoutView: View {
         .padding(.vertical, 4)
         .contentShape(Rectangle())
     }
-
-    // MARK: - Add validation
 
     private func addWorkout() {
         nameError = nil; setsError = nil; repsError = nil; weightError = nil
@@ -197,13 +200,19 @@ struct WorkoutView: View {
             return
         }
 
+        let hitPR = PRCalculator.isPR(exerciseName: trimmedName, weight: weight, in: workouts)
+
         workouts.append(Workout(exerciseName: trimmedName, sets: sets, reps: reps, weight: weight))
         saveWorkouts()
 
+        if hitPR {
+            prBannerMessage = "\(trimmedName): \(String(format: "%.1f", weight)) lbs"
+            showPRBanner = true
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        }
+
         name = ""; setsText = ""; repsText = ""; weightText = ""
     }
-
-    // MARK: - Delete (replaces WorkoutAdapter's delete button + AlertDialog)
 
     private func confirmDelete() {
         guard let target = workoutPendingDelete,
@@ -216,15 +225,11 @@ struct WorkoutView: View {
         saveWorkouts()
     }
 
-    // MARK: - Edit (replaces WorkoutAdapter's edit button + dialog_edit_workout)
-
     private func saveEdit(_ updated: Workout) {
         guard let index = workouts.firstIndex(where: { $0.id == updated.id }) else { return }
         workouts[index] = updated
         saveWorkouts()
     }
-
-    // MARK: - Persistence
 
     private func saveWorkouts() {
         if let data = try? JSONEncoder().encode(workouts) {
@@ -241,7 +246,38 @@ struct WorkoutView: View {
     }
 }
 
-/// Replaces dialog_edit_workout.xml + the edit AlertDialog logic in WorkoutAdapter.
+private struct WorkoutAlerts: ViewModifier {
+    @Binding var showInvalidNumberAlert: Bool
+    @Binding var workoutPendingDelete: Workout?
+    @Binding var showPRBanner: Bool
+    let prBannerMessage: String
+    let onConfirmDelete: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .alert("Please enter valid numbers.", isPresented: $showInvalidNumberAlert) {
+                Button("OK", role: .cancel) {}
+            }
+            .alert(
+                "Delete Workout",
+                isPresented: Binding(
+                    get: { workoutPendingDelete != nil },
+                    set: { if !$0 { workoutPendingDelete = nil } }
+                )
+            ) {
+                Button("Cancel", role: .cancel) { workoutPendingDelete = nil }
+                Button("Delete", role: .destructive) { onConfirmDelete() }
+            } message: {
+                Text("Are you sure you want to delete this workout?")
+            }
+            .alert("New Personal Record! 🎉", isPresented: $showPRBanner) {
+                Button("Nice!", role: .cancel) {}
+            } message: {
+                Text(prBannerMessage)
+            }
+    }
+}
+
 private struct EditWorkoutSheet: View {
     @Environment(\.dismiss) private var dismiss
 

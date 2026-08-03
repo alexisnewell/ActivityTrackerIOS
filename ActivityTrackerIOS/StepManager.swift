@@ -16,7 +16,6 @@ class StepManager {
 
         let calendar = Calendar.current
 
-        // Calculate today's date boundaries
         let startOfDay = calendar.startOfDay(for: Date())
         let endOfDay = calendar.date(
             byAdding: .day,
@@ -35,13 +34,9 @@ class StepManager {
             let results = try context.fetch(descriptor)
 
             if let existing = results.first {
-
-                // Update today's record
                 existing.steps = steps
 
             } else {
-
-                // Create today's record
                 let newEntry = DailySteps(
                     date: startOfDay,
                     steps: steps

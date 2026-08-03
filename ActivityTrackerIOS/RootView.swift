@@ -30,9 +30,6 @@ struct RootView: View {
         .preferredColorScheme(.dark)
     }
 
-    /// Uses a custom asset from Assets.xcassets if one exists with this name,
-    /// otherwise falls back to a built-in SF Symbol so the tab bar never
-    /// shows a blank icon while you're still adding your own images.
     @ViewBuilder
     private func tabIcon(assetName: String, systemFallback: String, title: String) -> some View {
         if UIImage(named: assetName) != nil {
@@ -40,7 +37,7 @@ struct RootView: View {
                 Text(title)
             } icon: {
                 Image(assetName)
-                    .renderingMode(.original) // forces iOS to keep the real color; tab bars ignore Contents.json otherwise
+                    .renderingMode(.original) 
             }
         } else {
             Label(title, systemImage: systemFallback)

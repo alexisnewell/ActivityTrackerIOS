@@ -9,18 +9,6 @@ import SwiftUI
 import CoreMotion
 
 /// SwiftUI equivalent of MainActivity.java.
-///
-/// Key architectural difference from the Android version:
-/// - No JNI / C++ bridge, no sensor_bridge.cpp, no StepDetector, no OrientationFilter.
-/// - Step counting uses CMPedometer, which reads Apple's hardware motion
-///   coprocessor directly — more accurate and far more battery-efficient
-///   than hand-rolled peak detection, and it works even when the app isn't running.
-/// - Pitch/roll use CMMotionManager's deviceMotion, which already applies
-///   Apple's own sensor fusion (a full attitude estimator) — this replaces
-///   OrientationFilter's complementary filter with a built-in equivalent.
-/// - Carry mode (hand/pocket/bag) has no built-in iOS equivalent — CoreMotion
-///   doesn't expose this. Left as "Unknown" for now; would need a custom
-///   classifier ported from StepDetector's threshold logic if you want it back.
 struct StepsView: View {
 
     @StateObject private var motion = MotionTracker()
