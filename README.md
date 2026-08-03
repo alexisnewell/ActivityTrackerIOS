@@ -27,7 +27,8 @@ Key Features:
 Step tracking interface with real-time activity monitoring
 Full CRUD workout tracker allowing users to create, edit, and delete workouts with exercises, sets, reps, and weight
 Workout history view grouped by day, letting users review past sessions at a glance
-Automatic personal record (PR) tracking that detects and displays a user's best weight per exercise, with an in-app alert when a new PR is logged
+Automatic personal record (PR) tracking that detects and displays a user's best weight per exercise
+Ability to export step and workout data to a .csv file
 Multi-screen navigation using SwiftUI's TabView and state-driven navigation
 Persistent local storage for workout data across app launches
 
