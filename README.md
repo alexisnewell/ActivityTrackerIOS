@@ -1,28 +1,32 @@
 <table align="center">
   <tr>
-    <td>
-<img width="386" height="772" alt="Screenshot 2026-08-03 at 4 20 53 PM" src="https://github.com/user-attachments/assets/62f8d69d-da2f-48b7-9595-b412d076d594" />
+    <td align="center">
+      <b>Dashboard</b><br><br>
+      <img src="https://github.com/user-attachments/assets/62f8d69d-da2f-48b7-9595-b412d076d594" width="250"/>
     </td>
-    <td>
-<img width="376" height="802" alt="Screenshot 2026-08-03 at 5 13 05 PM" src="https://github.com/user-attachments/assets/a8a90c3a-f30f-41c4-8d95-7b374f805076" />
-
-      </td>
-    <td>
-<img width="390" height="806" alt="Screenshot 2026-08-03 at 5 13 14 PM" src="https://github.com/user-attachments/assets/a5434fdb-34e0-4471-98ad-7c2d8c1cc815" />
-      </td>
-    <td>
-
-<img width="382" height="817" alt="Screenshot 2026-08-03 at 5 12 29 PM" src="https://github.com/user-attachments/assets/24f1c314-6f13-40f5-a2a5-10c18eba2a4a" />
-
-</td>
-<td>
-  <img width="385" height="801" alt="Screenshot 2026-08-03 at 5 12 54 PM" src="https://github.com/user-attachments/assets/c512c318-73d0-49a4-a869-066cf97a16cb" />
-
-  </td>
-  <td>
-    <img width="374" height="801" alt="Screenshot 2026-08-03 at 5 12 43 PM" src="https://github.com/user-attachments/assets/dfad3780-7820-4ae9-bb8a-62b67ed4b378" />
- </td>
- </tr>
+    <td align="center">
+      <b>Step Counter</b><br><br>
+      <img src="https://github.com/user-attachments/assets/a8a90c3a-f30f-41c4-8d95-7b374f805076" width="250"/>
+    </td>
+    <td align="center">
+      <b>Workout History</b><br><br>
+      <img src="https://github.com/user-attachments/assets/a5434fdb-34e0-4471-98ad-7c2d8c1cc815" width="250"/>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <b>Workout List</b><br><br>
+      <img src="https://github.com/user-attachments/assets/24f1c314-6f13-40f5-a2a5-10c18eba2a4a" width="250"/>
+    </td>
+    <td align="center">
+      <b>Create Workout</b><br><br>
+      <img src="https://github.com/user-attachments/assets/c512c318-73d0-49a4-a869-066cf97a16cb" width="250"/>
+    </td>
+    <td align="center">
+      <b>Edit Workout</b><br><br>
+      <img src="https://github.com/user-attachments/assets/dfad3780-7820-4ae9-bb8a-62b67ed4b378" width="250"/>
+    </td>
+  </tr>
 </table>
 
 
