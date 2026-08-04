@@ -9,7 +9,7 @@
       <img src="https://github.com/user-attachments/assets/a8a90c3a-f30f-41c4-8d95-7b374f805076" width="250"/>
     </td>
     <td align="center">
-      <b>Workout History</b><br><br>
+      <b>Step History</b><br><br>
       <img src="https://github.com/user-attachments/assets/a5434fdb-34e0-4471-98ad-7c2d8c1cc815" width="250"/>
     </td>
   </tr>
@@ -19,11 +19,11 @@
       <img src="https://github.com/user-attachments/assets/24f1c314-6f13-40f5-a2a5-10c18eba2a4a" width="250"/>
     </td>
     <td align="center">
-      <b>Create Workout</b><br><br>
+      <b>Workout History</b><br><br>
       <img src="https://github.com/user-attachments/assets/c512c318-73d0-49a4-a869-066cf97a16cb" width="250"/>
     </td>
     <td align="center">
-      <b>Edit Workout</b><br><br>
+      <b>PRs</b><br><br>
       <img src="https://github.com/user-attachments/assets/dfad3780-7820-4ae9-bb8a-62b67ed4b378" width="250"/>
     </td>
   </tr>
