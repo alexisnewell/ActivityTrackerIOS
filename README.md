@@ -37,14 +37,14 @@ iOS Fitness App (Swift, SwiftUI)
 Activity Tracker iOS is a native iOS fitness application built with Swift and SwiftUI. The app provides step tracking, workout management, and a modern multi-screen interface, demonstrating Apple's declarative UI framework and iOS application architecture.
 
 Key Features:
-
-Step tracking interface with real-time activity monitoring
-Full CRUD workout tracker allowing users to create, edit, and delete workouts with exercises, sets, reps, and weight
-Workout history view grouped by day, letting users review past sessions at a glance
-Automatic personal record (PR) tracking that detects and displays a user's best weight per exercise
-Ability to export step and workout data to a .csv file
-Multi-screen navigation using SwiftUI's TabView and state-driven navigation
-Persistent local storage for workout data across app launches
+* **Real-time step tracking** with a dedicated interface for monitoring daily activity.
+* **Full CRUD workout tracker** allowing users to create, view, edit, and delete workouts.
+* **Exercise logging** with support for exercises, sets, reps, and weight.
+* **Workout history** grouped by day for easy review of previous training sessions.
+* **Automatic personal record (PR) tracking** that detects and displays the highest weight lifted for each exercise.
+* **CSV export** for step counts and workout history.
+* **Multi-screen navigation** built with SwiftUI's `TabView` and state-driven navigation.
+* **Persistent local storage** ensuring workout and step data are retained across app launches.
 
 Skills Demonstrated:
 
