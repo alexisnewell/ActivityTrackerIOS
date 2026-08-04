@@ -19,11 +19,11 @@
       <img src="https://github.com/user-attachments/assets/24f1c314-6f13-40f5-a2a5-10c18eba2a4a" width="250"/>
     </td>
     <td align="center">
-      <b>Workout History</b><br><br>
+      <b>PRs</b><br><br>
       <img src="https://github.com/user-attachments/assets/c512c318-73d0-49a4-a869-066cf97a16cb" width="250"/>
     </td>
     <td align="center">
-      <b>PRs</b><br><br>
+      <b>Workout History</b><br><br>
       <img src="https://github.com/user-attachments/assets/dfad3780-7820-4ae9-bb8a-62b67ed4b378" width="250"/>
     </td>
   </tr>
