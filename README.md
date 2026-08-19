@@ -1,34 +1,12 @@
-<table align="center">
+<table>
   <tr>
-    <td align="center">
-      <b>Dashboard</b><br><br>
-      <img src="https://github.com/user-attachments/assets/62f8d69d-da2f-48b7-9595-b412d076d594" width="250"/>
-    </td>
-    <td align="center">
-      <b>Step Counter</b><br><br>
-      <img src="https://github.com/user-attachments/assets/a8a90c3a-f30f-41c4-8d95-7b374f805076" width="250"/>
-    </td>
-    <td align="center">
-      <b>Step History</b><br><br>
-      <img src="https://github.com/user-attachments/assets/a5434fdb-34e0-4471-98ad-7c2d8c1cc815" width="250"/>
-    </td>
-  </tr>
-  <tr>
-    <td align="center">
-      <b>Workout List</b><br><br>
-      <img src="https://github.com/user-attachments/assets/24f1c314-6f13-40f5-a2a5-10c18eba2a4a" width="250"/>
-    </td>
-    <td align="center">
-      <b>PRs</b><br><br>
-      <img src="https://github.com/user-attachments/assets/c512c318-73d0-49a4-a869-066cf97a16cb" width="250"/>
-    </td>
-    <td align="center">
-      <b>Workout History</b><br><br>
-      <img src="https://github.com/user-attachments/assets/dfad3780-7820-4ae9-bb8a-62b67ed4b378" width="250"/>
-    </td>
+    <td><img src="https://github.com/user-attachments/assets/8db668fd-c9df-4aca-80c2-bd95e5f50bf1" width="180"></td>
+    <td><img src="https://github.com/user-attachments/assets/aa7adffa-4031-4e22-85a4-d590ca3d0066" width="180"></td>
+    <td><img src="https://github.com/user-attachments/assets/539fe928-6b16-4dae-b18d-f17adc152db6" width="180"></td>
+    <td><img src="https://github.com/user-attachments/assets/a7abeba5-a076-4e1b-b661-56e30eeaee35" width="180"></td>
+    <td><img src="https://github.com/user-attachments/assets/33dc29e1-62f6-4e6d-aeec-642a74004f47" width="180"></td>
   </tr>
 </table>
-
 
 # ActivityTrackerIOS
 
