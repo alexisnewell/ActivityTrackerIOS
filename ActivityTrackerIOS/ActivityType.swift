@@ -2,8 +2,8 @@ import Foundation
 import SwiftData
 
 enum ActivityType: String, Codable, CaseIterable {
-    case walk = "Walk"
     case run = "Run"
+    case walk = "Walk"
 }
 
 @Model
@@ -13,13 +13,22 @@ class ActivityRecord {
     var steps: Int
     var distanceMiles: Double
     var durationSeconds: Int
+    var splitSecondsByDistance: [String: Int]
 
-    init(type: ActivityType, date: Date = Date(), steps: Int, distanceMiles: Double, durationSeconds: Int) {
+    init(
+        type: ActivityType,
+        date: Date = Date(),
+        steps: Int,
+        distanceMiles: Double,
+        durationSeconds: Int,
+        splitSecondsByDistance: [String: Int] = [:]
+    ) {
         self.type = type.rawValue
         self.date = date
         self.steps = steps
         self.distanceMiles = distanceMiles
         self.durationSeconds = durationSeconds
+        self.splitSecondsByDistance = splitSecondsByDistance
     }
 
     var durationFormatted: String {

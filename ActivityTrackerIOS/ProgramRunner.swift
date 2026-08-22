@@ -3,31 +3,25 @@ import Foundation
 @MainActor
 final class ProgramRunner: ObservableObject {
     @Published var activeProgram: Program?
-    @Published var activeExerciseIndex: Int = 0
+    @Published var loggedIndices: Set<Int> = []
 
-    var currentExercise: ProgramExercise? {
-        guard let program = activeProgram, activeExerciseIndex < program.exercises.count else {
-            return nil
-        }
-        return program.exercises[activeExerciseIndex]
+    var isComplete: Bool {
+        guard let program = activeProgram else { return false }
+        return !program.exercises.isEmpty && loggedIndices.count >= program.exercises.count
     }
 
     func start(_ program: Program) {
         guard !program.exercises.isEmpty else { return }
         activeProgram = program
-        activeExerciseIndex = 0
+        loggedIndices = []
     }
 
-    func advance() {
-        guard let program = activeProgram else { return }
-        activeExerciseIndex += 1
-        if activeExerciseIndex >= program.exercises.count {
-            end()
-        }
+    func markLogged(index: Int) {
+        loggedIndices.insert(index)
     }
 
     func end() {
         activeProgram = nil
-        activeExerciseIndex = 0
+        loggedIndices = []
     }
 }

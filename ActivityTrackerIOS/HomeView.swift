@@ -9,11 +9,20 @@ struct HomeView: View {
 
     @Query(sort: \DailySteps.date, order: .reverse)
     private var stepHistory: [DailySteps]
+    
+    @Query(sort: \ActivityRecord.date, order: .reverse)
+    private var activityRecords: [ActivityRecord]
 
     var body: some View {
         VStack(spacing: 24) {
             titleView
             subtitleView
+            homeCard(title: "Start Activity",
+                     iconName: "",
+                     systemFallback: "play.fill",
+                     tab: .activityTracker,
+                     iconColor: Color(hex: "8c52ff")
+                     )
             homeCard(
                 title: "Steps",
                 iconName: "step_logo",
@@ -26,7 +35,13 @@ struct HomeView: View {
                 systemFallback: "dumbbell",
                 tab: .workouts
             )
-            ExportButton(workouts: workouts, stepHistory: stepHistory)
+            homeCard(title: "Programs",
+                     iconName: "program_logo",
+                     systemFallback:"list.bullet.rectangle",
+                     tab: .programs
+            )
+            Spacer()
+            ExportButton(workouts: workouts, stepHistory: stepHistory, activityRecords: activityRecords)
                 .foregroundColor(.white)
             Spacer()
         }
@@ -44,32 +59,31 @@ struct HomeView: View {
     }
 
     private var subtitleView: some View {
-        Text("What do you want to track?")
+        Text("Track all your runs and workouts.")
             .font(.subheadline)
             .foregroundColor(.gray)
     }
 
-    private func homeCard(title: String, iconName: String, systemFallback: String, tab: AppTab) -> some View {
+    private func homeCard(title: String, iconName: String, systemFallback: String, tab: AppTab, iconColor: Color? = nil) -> some View {
         Button {
             selectedTab = tab
         } label: {
             VStack(spacing: 8) {
-                logoImage(named: iconName, systemFallback: systemFallback)
+                logoImage(named: iconName, systemFallback: systemFallback, iconColor: iconColor ?? .white)
                     .frame(width: 40, height: 40)
                 Text(title)
                     .font(.title3).bold()
                     .foregroundColor(.white)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 140)
+            .frame(height: 110)
             .background(Color(white: 0.12))
             .cornerRadius(16)
         }
         .buttonStyle(.plain)
     }
-
     @ViewBuilder
-    private func logoImage(named assetName: String, systemFallback: String) -> some View {
+    private func logoImage(named assetName: String, systemFallback: String, iconColor: Color) -> some View {
         if UIImage(named: assetName) != nil {
             Image(assetName)
                 .renderingMode(.original)
@@ -79,7 +93,7 @@ struct HomeView: View {
             Image(systemName: systemFallback)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .foregroundColor(.white)
+                .foregroundColor(iconColor)
         }
     }
 
@@ -89,6 +103,21 @@ struct HomeView: View {
             return
         }
         workouts = decoded
+    }
+}
+
+extension Color {
+    init(hex: String) {
+        let cleaned = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "#", with: "")
+        var rgb: UInt64 = 0
+        Scanner(string: cleaned).scanHexInt64(&rgb)
+
+        let r = Double((rgb >> 16) & 0xFF) / 255
+        let g = Double((rgb >> 8) & 0xFF) / 255
+        let b = Double(rgb & 0xFF) / 255
+
+        self.init(red: r, green: g, blue: b)
     }
 }
 

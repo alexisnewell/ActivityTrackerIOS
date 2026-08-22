@@ -11,17 +11,25 @@ import SwiftData
 
 /// SwiftUI equivalent of MainActivity.java.
 struct StepsView: View {
-
+    
     @StateObject private var motion = MotionTracker()
     @Environment(\.modelContext) private var context
-
+    @State private var goal: Int = UserDefaults.standard.integer(forKey: "step_goal") == 0
+    ? 10000
+    : UserDefaults.standard.integer(forKey: "step_goal")
+    @State private var showGoalEditor = false
+    @State private var goalInputText = ""
+    @State private var hasCelebratedGoalToday = false
+    @State private var showGoalReachedAlert = false
+    
     var body: some View {
         NavigationStack {
             VStack(spacing: 12) {
                 titleView
+                GoalView
+                Spacer()
                 stepsView
-                orientationView
-                resetButton
+                Spacer()
                 historyButton
                 Spacer()
             }
@@ -33,45 +41,86 @@ struct StepsView: View {
                 motion.stop()
                 saveTodaySteps()
             }
+            .onChange(of: motion.steps) { _, newValue in
+                checkGoalReached(steps: newValue)
+            }
+            .alert("Set Step Goal", isPresented: $showGoalEditor) {
+                TextField("Goal", text: $goalInputText)
+                    .keyboardType(.numberPad)
+                Button("Cancel", role: .cancel) {}
+                Button("Save") { saveGoal() }
+            }
+            .alert("Goal Reached! 🎉", isPresented: $showGoalReachedAlert) {
+                Button("Nice!", role: .cancel) {}
+            } message: {
+                Text("You hit your goal of \(goal) steps today.")
+            }
         }
-    }
-
-    private var titleView: some View {
-        Text("Steps")
-            .font(.title2).bold()
-            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var stepsView: some View {
+        ZStack {
+            Circle()
+                .stroke(Color.gray.opacity(0.2), lineWidth: 14)
+
+            Circle()
+                .trim(from: 0, to: progressFraction)
+                .stroke(
+                    progressFraction >= 1.0 ? Color.green : Color.blue,
+                    style: StrokeStyle(lineWidth: 14, lineCap: .round)
+                )
+                .rotationEffect(.degrees(-90))
+                .animation(.easeOut(duration: 0.4), value: progressFraction)
+
+            VStack(spacing: 4) {
+                Text("Steps").font(.caption).foregroundColor(.gray)
+                Text("\(motion.steps)")
+                    .font(.system(size: 48, weight: .bold))
+                    .minimumScaleFactor(0.5)
+                    .lineLimit(1)
+            }
+            .padding(24)
+        }
+        .frame(width: 220, height: 220)
+    }
+
+    private var progressFraction: Double {
+        guard goal > 0 else { return 0 }
+        return min(Double(motion.steps) / Double(goal), 1.0)
+    }
+    private var titleView: some View {
+        Text("Total Steps")
+            .font(.title).bold()
+            .frame(maxWidth: .infinity, alignment: .center)
+            .multilineTextAlignment(.center)
+    }
+    
+    private var GoalView: some View {
         VStack(spacing: 4) {
-            Text("Steps").font(.caption).foregroundColor(.gray)
-            Text("\(motion.steps)")
-                .font(.system(size: 64, weight: .bold))
+            Text("Goal: \(goal)")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            Button("Edit Goal") {
+                goalInputText = String(goal)
+                showGoalEditor = true
+            }
+            .font(.caption)
+            .buttonStyle(.bordered)
         }
     }
-
-    private var orientationView: some View {
-        HStack(spacing: 32) {
-            VStack {
-                Text("Pitch").font(.caption).foregroundColor(.gray)
-                Text(String(format: "%.1f°", motion.pitch))
-                    .font(.title2).bold()
-                    .foregroundColor(.blue)
-            }
-            VStack {
-                Text("Roll").font(.caption).foregroundColor(.gray)
-                Text(String(format: "%.1f°", motion.roll))
-                    .font(.title2).bold()
-                    .foregroundColor(.blue)
-            }
-        }
+    
+    private func saveGoal() {
+        guard let newGoal = Int(goalInputText), newGoal > 0 else { return }
+        goal = newGoal
+        UserDefaults.standard.set(newGoal, forKey: "step_goal")
+        hasCelebratedGoalToday = false // allow re-celebrating if they raise the goal past current steps
     }
 
-    private var resetButton: some View {
-        Button("Reset Steps") {
-            motion.resetSteps()
-        }
-        .buttonStyle(.bordered)
+    private func checkGoalReached(steps: Int) {
+        guard steps >= goal, !hasCelebratedGoalToday else { return }
+        hasCelebratedGoalToday = true
+        showGoalReachedAlert = true
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
 
     private var historyButton: some View {
@@ -82,6 +131,7 @@ struct StepsView: View {
         }
         .buttonStyle(.borderedProminent)
     }
+
     /// Persists (or updates) today's step count into SwiftData so it shows up
     /// in Step History and can be exported. Called whenever the user leaves this screen.
     private func saveTodaySteps() {

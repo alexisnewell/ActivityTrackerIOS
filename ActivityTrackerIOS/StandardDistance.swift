@@ -5,7 +5,6 @@
 //  Created by Alexis Newell on 2026-08-22.
 //
 
-
 import Foundation
 
 struct StandardDistance: Identifiable {
@@ -15,6 +14,7 @@ struct StandardDistance: Identifiable {
 }
 
 enum StandardDistances {
+    // Must stay sorted ascending — ActivityTracker.checkSplits() depends on this order.
     static let all: [StandardDistance] = [
         StandardDistance(name: "1K", miles: 0.621371),
         StandardDistance(name: "Mile", miles: 1.0),
@@ -28,61 +28,49 @@ enum StandardDistances {
 struct RunningPR: Identifiable {
     var id: String { distance.name }
     let distance: StandardDistance
-    let estimatedSeconds: Int
+    let seconds: Int
     let date: Date
-    let sourceRunDistance: Double
 
     var timeFormatted: String {
-        let hours = estimatedSeconds / 3600
-        let minutes = (estimatedSeconds % 3600) / 60
-        let seconds = estimatedSeconds % 60
+        let hours = seconds / 3600
+        let minutes = (seconds % 3600) / 60
+        let secs = seconds % 60
         if hours > 0 {
-            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
+            return String(format: "%d:%02d:%02d", hours, minutes, secs)
         }
-        return String(format: "%d:%02d", minutes, seconds)
+        return String(format: "%d:%02d", minutes, secs)
     }
 
     var paceFormatted: String {
-        let paceSeconds = Double(estimatedSeconds) / distance.miles
+        let paceSeconds = Double(seconds) / distance.miles
         let minutes = Int(paceSeconds) / 60
-        let seconds = Int(paceSeconds) % 60
-        return String(format: "%d:%02d /mi", minutes, seconds)
+        let secs = Int(paceSeconds) % 60
+        return String(format: "%d:%02d /mi", minutes, secs)
     }
 }
 
 enum RunningPRCalculator {
-    /// Estimates a PR for each standard distance from completed runs.
-    /// Since sessions store total distance/duration rather than exact splits,
-    /// a run's average pace is used to estimate the time it would take to cover
-    /// each standard distance — only runs that actually covered at least that
-    /// distance are eligible, and the fastest (lowest) estimate wins.
+    /// Uses the actual GPS-measured split time recorded at the moment each
+    /// standard distance was crossed during a run — real elapsed time, not an estimate.
     static func calculate(from records: [ActivityRecord]) -> [RunningPR] {
-        let runs = records.filter { $0.type == ActivityType.run.rawValue && $0.distanceMiles > 0 }
+        let runs = records.filter { $0.type == ActivityType.run.rawValue }
 
-        var results: [RunningPR] = []
+        var best: [String: RunningPR] = [:]
 
-        for distance in StandardDistances.all {
-            let eligible = runs.filter { $0.distanceMiles >= distance.miles }
-            guard !eligible.isEmpty else { continue }
+        for run in runs {
+            for distance in StandardDistances.all {
+                guard let splitSeconds = run.splitSecondsByDistance[distance.name] else { continue }
 
-            let best = eligible.min { lhs, rhs in
-                let lhsPace = Double(lhs.durationSeconds) / lhs.distanceMiles
-                let rhsPace = Double(rhs.durationSeconds) / rhs.distanceMiles
-                return lhsPace < rhsPace
-            }
-
-            if let best {
-                let pacePerMile = Double(best.durationSeconds) / best.distanceMiles
-                let estimatedSeconds = Int(pacePerMile * distance.miles)
-                results.append(RunningPR(
-                    distance: distance,
-                    estimatedSeconds: estimatedSeconds,
-                    date: best.date,
-                    sourceRunDistance: best.distanceMiles
-                ))
+                if let existing = best[distance.name] {
+                    if splitSeconds < existing.seconds {
+                        best[distance.name] = RunningPR(distance: distance, seconds: splitSeconds, date: run.date)
+                    }
+                } else {
+                    best[distance.name] = RunningPR(distance: distance, seconds: splitSeconds, date: run.date)
+                }
             }
         }
 
-        return results
+        return StandardDistances.all.compactMap { best[$0.name] }
     }
 }

@@ -1,15 +1,22 @@
 import SwiftUI
+
 struct ExportButton: View {
     let workouts: [Workout]
     let stepHistory: [DailySteps]
+    let activityRecords: [ActivityRecord]
 
     @State private var showOptions = false
     @State private var exportURLs: [URL] = []
     @State private var showExportError = false
 
     private var hasAnyData: Bool {
-        !workouts.isEmpty || !stepHistory.isEmpty
+        !workouts.isEmpty || !stepHistory.isEmpty || !activityRecords.isEmpty
     }
+
+    private var hasRunningPRs: Bool {
+        !RunningPRCalculator.calculate(from: activityRecords).isEmpty
+    }
+
     var body: some View {
         Button {
             showOptions = true
@@ -22,8 +29,10 @@ struct ExportButton: View {
                 .disabled(workouts.isEmpty)
             Button("Export Steps") { export(.steps) }
                 .disabled(stepHistory.isEmpty)
-            Button("Export Both") { export(.both) }
-                .disabled(workouts.isEmpty && stepHistory.isEmpty)
+            Button("Export Running PRs") { export(.runningPRs) }
+                .disabled(!hasRunningPRs)
+            Button("Export All") { export(.all) }
+                .disabled(!hasAnyData)
             Button("Cancel", role: .cancel) {}
         }
         .alert("Couldn't export history", isPresented: $showExportError) {
@@ -36,24 +45,35 @@ struct ExportButton: View {
             ShareSheet(activityItems: exportURLs)
         }
     }
+
     private enum ExportKind {
-        case workouts, steps, both
+        case workouts, steps, runningPRs, all
     }
+
     private func export(_ kind: ExportKind) {
         var urls: [URL] = []
 
-        if kind == .workouts || kind == .both {
+        if kind == .workouts || kind == .all {
             let csv = CSVExporter.generateWorkoutHistoryCSV(from: workouts)
             if let url = CSVExporter.writeCSVToTempFile(csv, filename: "workout_history.csv") {
                 urls.append(url)
             }
         }
-        if kind == .steps || kind == .both {
+
+        if kind == .steps || kind == .all {
             let csv = CSVExporter.generateStepsHistoryCSV(from: stepHistory)
             if let url = CSVExporter.writeCSVToTempFile(csv, filename: "step_history.csv") {
                 urls.append(url)
             }
         }
+
+        if kind == .runningPRs || kind == .all {
+            let csv = CSVExporter.generateRunningPRsCSV(from: activityRecords)
+            if let url = CSVExporter.writeCSVToTempFile(csv, filename: "running_prs.csv") {
+                urls.append(url)
+            }
+        }
+
         guard !urls.isEmpty else {
             showExportError = true
             return

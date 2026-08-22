@@ -1,11 +1,12 @@
 import SwiftUI
 
 enum AppTab: Hashable {
-    case home, steps, workouts
+    case home, steps, workouts, programs, activityTracker
 }
 
 struct RootView: View {
     @State private var selectedTab: AppTab = .home
+    @StateObject private var programRunner = ProgramRunner()
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -14,7 +15,11 @@ struct RootView: View {
                     Label("Home", systemImage: "house.fill")
                 }
                 .tag(AppTab.home)
-
+            ActivityTrackerView()
+                .tabItem {
+                    Label("Start Activity", systemImage: "play.fill")
+                }
+                .tag(AppTab.activityTracker)
             StepsView()
                 .tabItem {
                     Label("Steps", systemImage: "figure.walk")
@@ -26,8 +31,20 @@ struct RootView: View {
                     Label("Workouts", systemImage: "dumbbell.fill")
                 }
                 .tag(AppTab.workouts)
+            NavigationStack {
+                ProgramListView(onRunProgram: { _ in
+                    // Selecting a program from the tab bar just shows the list;
+                    // running one switches to Workouts where the run flow lives.
+                    selectedTab = .workouts
+                })
+            }
+                .tabItem {
+                    Label("Programs", systemImage: "list.bullet.rectangle") }
+                .tag(AppTab.programs)
+            }
+            .environmentObject(programRunner)
+            .preferredColorScheme(.dark)
         }
-        .preferredColorScheme(.dark)
     }
 
     @ViewBuilder
@@ -43,7 +60,6 @@ struct RootView: View {
             Label(title, systemImage: systemFallback)
         }
     }
-}
 
 #Preview {
     RootView()

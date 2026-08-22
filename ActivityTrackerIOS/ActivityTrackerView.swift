@@ -1,3 +1,11 @@
+//
+//  ActivityTrackerView.swift
+//  ActivityTrackerIOS
+//
+//  Created by Alexis Newell on 2026-08-15.
+//
+
+import CoreLocation
 import SwiftUI
 import CoreMotion
 import SwiftData
@@ -7,7 +15,7 @@ struct ActivityTrackerView: View {
     @StateObject private var tracker = ActivityTracker()
     @Environment(\.modelContext) private var context
 
-    @State private var selectedType: ActivityType = .walk
+    @State private var selectedType: ActivityType = .run
     @State private var isTracking = false
 
     var body: some View {
@@ -15,6 +23,13 @@ struct ActivityTrackerView: View {
             VStack(spacing: 20) {
                 titleView
                 typePicker
+                if tracker.authorizationDenied {
+                    Text("Location access is required to track distance. Enable it in Settings.")
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                }
                 Spacer()
                 statsView
                 Spacer()
@@ -25,6 +40,15 @@ struct ActivityTrackerView: View {
             .onDisappear {
                 if isTracking {
                     stopAndSave()
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    NavigationLink {
+                        RunningPRsView()
+                    } label: {
+                        Image(systemName: "trophy")
+                    }
                 }
             }
         }
@@ -91,7 +115,8 @@ struct ActivityTrackerView: View {
             type: selectedType,
             steps: tracker.steps,
             distanceMiles: tracker.distanceMiles,
-            durationSeconds: tracker.elapsedSeconds
+            durationSeconds: tracker.elapsedSeconds,
+            splitSecondsByDistance: tracker.splitSecondsByDistance
         )
         context.insert(record)
         try? context.save()
@@ -100,22 +125,30 @@ struct ActivityTrackerView: View {
     }
 }
 
-/// Same CMPedometer-based step/distance approach as MotionTracker in StepsView,
-/// plus a live elapsed-time timer for the activity session.
+/// Tracks distance via GPS (CoreLocation) instead of stride-length estimation,
+/// step count from CMPedometer, elapsed time, and per-distance split times
+/// recorded the moment each standard distance is crossed mid-run.
 @MainActor
-final class ActivityTracker: ObservableObject {
+final class ActivityTracker: NSObject, ObservableObject {
     @Published var steps: Int = 0
     @Published var elapsedSeconds: Int = 0
+    @Published var distanceMiles: Double = 0
+    @Published var authorizationDenied = false
 
     private let pedometer = CMPedometer()
+    private let locationManager = CLLocationManager()
+    private var lastLocation: CLLocation?
     private var sessionStart = Date()
     private var timer: Timer?
 
-    // Same stride assumption as StepsView's distanceMiles calculation
-    var distanceMiles: Double {
-        let strideFeet = 2.5
-        let feet = Double(steps) * strideFeet
-        return feet / 5280
+    private(set) var splitSecondsByDistance: [String: Int] = [:]
+    private var remainingDistances = StandardDistances.all
+
+    override init() {
+        super.init()
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        locationManager.activityType = .fitness
     }
 
     var elapsedFormatted: String {
@@ -128,6 +161,19 @@ final class ActivityTracker: ObservableObject {
         sessionStart = Date()
         steps = 0
         elapsedSeconds = 0
+        distanceMiles = 0
+        lastLocation = nil
+        splitSecondsByDistance = [:]
+        remainingDistances = StandardDistances.all
+
+        let status = locationManager.authorizationStatus
+        if status == .notDetermined {
+            locationManager.requestWhenInUseAuthorization()
+        } else if status == .denied || status == .restricted {
+            authorizationDenied = true
+        } else {
+            locationManager.startUpdatingLocation()
+        }
 
         if CMPedometer.isStepCountingAvailable() {
             pedometer.startUpdates(from: sessionStart) { [weak self] data, error in
@@ -140,13 +186,16 @@ final class ActivityTracker: ObservableObject {
 
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                self?.elapsedSeconds += 1
+                guard let self else { return }
+                self.elapsedSeconds += 1
+                self.checkSplits()
             }
         }
     }
 
     func stop() {
         pedometer.stopUpdates()
+        locationManager.stopUpdatingLocation()
         timer?.invalidate()
         timer = nil
     }
@@ -154,6 +203,44 @@ final class ActivityTracker: ObservableObject {
     func reset() {
         steps = 0
         elapsedSeconds = 0
+        distanceMiles = 0
+        lastLocation = nil
+        splitSecondsByDistance = [:]
+        remainingDistances = StandardDistances.all
+    }
+
+    private func checkSplits() {
+        while let next = remainingDistances.first, distanceMiles >= next.miles {
+            splitSecondsByDistance[next.name] = elapsedSeconds
+            remainingDistances.removeFirst()
+        }
+    }
+}
+
+extension ActivityTracker: CLLocationManagerDelegate {
+    nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let newLocation = locations.last else { return }
+
+        Task { @MainActor in
+            guard newLocation.horizontalAccuracy >= 0, newLocation.horizontalAccuracy < 20 else { return }
+
+            if let last = self.lastLocation {
+                let metersDelta = newLocation.distance(from: last)
+                self.distanceMiles += metersDelta / 1609.34
+                self.checkSplits()
+            }
+            self.lastLocation = newLocation
+        }
+    }
+
+    nonisolated func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        Task { @MainActor in
+            if status == .authorizedWhenInUse || status == .authorizedAlways {
+                manager.startUpdatingLocation()
+            } else if status == .denied || status == .restricted {
+                self.authorizationDenied = true
+            }
+        }
     }
 }
 

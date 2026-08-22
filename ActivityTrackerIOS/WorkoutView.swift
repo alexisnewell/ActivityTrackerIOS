@@ -2,20 +2,17 @@ import SwiftUI
 
 struct WorkoutView: View {
 
+    @EnvironmentObject private var programRunner: ProgramRunner
+
     @State private var workouts: [Workout] = []
-    @State private var name = ""
-    @State private var setsText = ""
-    @State private var repsText = ""
-    @State private var weightText = ""
-    @State private var nameError: String?
-    @State private var setsError: String?
-    @State private var repsError: String?
-    @State private var weightError: String?
-    @State private var showInvalidNumberAlert = false
     @State private var workoutPendingDelete: Workout?
     @State private var workoutBeingEdited: Workout?
     @State private var showPRBanner = false
     @State private var prBannerMessage = ""
+
+    @State private var showProgramPicker = false
+    @State private var showManualAdd = false
+    @State private var exerciseBeingLogged: ProgramExerciseLogTarget?
 
     private let storageKey = "workout_list"
 
@@ -24,16 +21,45 @@ struct WorkoutView: View {
             mainContent
                 .padding()
                 .onAppear(perform: loadWorkouts)
-                .modifier(WorkoutAlerts(
-                    showInvalidNumberAlert: $showInvalidNumberAlert,
-                    workoutPendingDelete: $workoutPendingDelete,
-                    showPRBanner: $showPRBanner,
-                    prBannerMessage: prBannerMessage,
-                    onConfirmDelete: confirmDelete
-                ))
+                .alert("New Personal Record! 🎉", isPresented: $showPRBanner) {
+                    Button("Nice!", role: .cancel) {}
+                } message: {
+                    Text(prBannerMessage)
+                }
+                .alert(
+                    "Delete Workout",
+                    isPresented: Binding(
+                        get: { workoutPendingDelete != nil },
+                        set: { if !$0 { workoutPendingDelete = nil } }
+                    )
+                ) {
+                    Button("Cancel", role: .cancel) { workoutPendingDelete = nil }
+                    Button("Delete", role: .destructive) { confirmDelete() }
+                } message: {
+                    Text("Are you sure you want to delete this workout?")
+                }
                 .sheet(item: $workoutBeingEdited) { workout in
                     EditWorkoutSheet(workout: workout) { updated in
                         saveEdit(updated)
+                    }
+                }
+                .sheet(isPresented: $showProgramPicker) {
+                    NavigationStack {
+                        ProgramListView { program in
+                            programRunner.start(program)
+                            showProgramPicker = false
+                        }
+                    }
+                }
+                .sheet(isPresented: $showManualAdd) {
+                    ManualAddWorkoutSheet { workout in
+                        logWorkout(workout)
+                    }
+                }
+                .sheet(item: $exerciseBeingLogged) { target in
+                    LogExerciseSheet(exercise: target.exercise) { workout in
+                        logWorkout(workout)
+                        programRunner.markLogged(index: target.index)
                     }
                 }
                 .toolbar {
@@ -47,8 +73,26 @@ struct WorkoutView: View {
     private var mainContent: some View {
         VStack(spacing: 12) {
             titleView
-            formView
-            addButton
+
+            if let program = programRunner.activeProgram {
+                activeProgramSection(program)
+            } else {
+                noActiveProgramCard
+            }
+
+            Divider()
+
+            HStack {
+                Text("All Workouts").font(.headline)
+                Spacer()
+                Button {
+                    showManualAdd = true
+                } label: {
+                    Label("Add", systemImage: "plus")
+                }
+                .buttonStyle(.bordered)
+            }
+
             listOrEmptyState
             Spacer()
         }
@@ -73,45 +117,93 @@ struct WorkoutView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var formView: some View {
+    // MARK: - Program section
+
+    private var noActiveProgramCard: some View {
         VStack(spacing: 8) {
-            labeledField("Exercise Name", text: $name, error: nameError)
-            labeledField("Sets", text: $setsText, error: setsError, keyboard: .numberPad)
-            labeledField("Reps", text: $repsText, error: repsError, keyboard: .numberPad)
-            labeledField("Weight (lbs)", text: $weightText, error: weightError, keyboard: .decimalPad)
-        }
-    }
-
-    private func labeledField(
-        _ placeholder: String,
-        text: Binding<String>,
-        error: String?,
-        keyboard: UIKeyboardType = .default
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            TextField(placeholder, text: text)
-                .textFieldStyle(.roundedBorder)
-                .keyboardType(keyboard)
-            if let error {
-                Text(error)
-                    .font(.caption)
-                    .foregroundColor(.red)
+            Text("No program running")
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.7))
+            Button("Select a Program") {
+                showProgramPicker = true
             }
-        }
-    }
-
-    private var addButton: some View {
-        Button("Add Workout") {
-            addWorkout()
+            .buttonStyle(.borderedProminent)
         }
         .frame(maxWidth: .infinity)
-        .buttonStyle(.borderedProminent)
+        .padding()
+        .background(Color(white: 0.15))
+        .cornerRadius(12)
     }
+
+    private func activeProgramSection(_ program: Program) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                VStack(alignment: .leading) {
+                    Text(program.name)
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    Text("\(programRunner.loggedIndices.count) of \(program.exercises.count) logged")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.7))
+                }
+                Spacer()
+                Button("End", role: .destructive) {
+                    programRunner.end()
+                }
+                .buttonStyle(.bordered)
+            }
+
+            if programRunner.isComplete {
+                Text("Program complete! 🎉")
+                    .font(.subheadline).bold()
+                    .foregroundColor(.green)
+            }
+
+            VStack(spacing: 6) {
+                ForEach(Array(program.exercises.enumerated()), id: \.element.id) { index, exercise in
+                    programExerciseRow(index: index, exercise: exercise)
+                }
+            }
+        }
+        .padding()
+        .background(Color(white: 0.15))
+        .cornerRadius(12)
+    }
+    
+    private func programExerciseRow(index: Int, exercise: ProgramExercise) -> some View {
+        let isLogged = programRunner.loggedIndices.contains(index)
+
+        return Button {
+            if !isLogged {
+                exerciseBeingLogged = ProgramExerciseLogTarget(index: index, exercise: exercise)
+            }
+        } label: {
+            HStack {
+                Image(systemName: isLogged ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(isLogged ? .green : .white.opacity(0.6))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(exercise.exerciseName)
+                        .font(.subheadline).bold()
+                        .foregroundColor(.white)
+                    Text("Sets: \(exercise.sets) | Reps: \(exercise.reps) | Weight: \(String(format: "%.1f", exercise.weight)) lbs")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.7))
+                }
+                Spacer()
+            }
+            .padding(8)
+            .background(Color(white: 0.22))
+            .cornerRadius(8)
+        }
+        .buttonStyle(.plain)
+        .disabled(isLogged)
+    }
+    // MARK: - All Workouts list
 
     @ViewBuilder
     private var listOrEmptyState: some View {
         if workouts.isEmpty {
-            Text("No workouts yet.\nTap Add Workout to get started!")
+            Text("No workouts yet.")
                 .multilineTextAlignment(.center)
                 .foregroundColor(.gray)
                 .padding(24)
@@ -155,63 +247,19 @@ struct WorkoutView: View {
         .contentShape(Rectangle())
     }
 
-    private func addWorkout() {
-        nameError = nil; setsError = nil; repsError = nil; weightError = nil
+    // MARK: - Logging
 
-        let trimmedName = name.trimmingCharacters(in: .whitespaces)
-        let trimmedSets = setsText.trimmingCharacters(in: .whitespaces)
-        let trimmedReps = repsText.trimmingCharacters(in: .whitespaces)
-        let trimmedWeight = weightText.trimmingCharacters(in: .whitespaces)
+    private func logWorkout(_ workout: Workout) {
+        let hitPR = PRCalculator.isPR(exerciseName: workout.exerciseName, weight: workout.weight, in: workouts)
 
-        guard !trimmedName.isEmpty else {
-            nameError = "Exercise name is required"
-            return
-        }
-        guard !trimmedSets.isEmpty else {
-            setsError = "Enter number of sets"
-            return
-        }
-        guard !trimmedReps.isEmpty else {
-            repsError = "Enter number of reps"
-            return
-        }
-        guard !trimmedWeight.isEmpty else {
-            weightError = "Enter weight"
-            return
-        }
-
-        guard let sets = Int(trimmedSets),
-              let reps = Int(trimmedReps),
-              let weight = Double(trimmedWeight) else {
-            showInvalidNumberAlert = true
-            return
-        }
-
-        guard sets > 0 else {
-            setsError = "Sets must be greater than 0"
-            return
-        }
-        guard reps > 0 else {
-            repsError = "Reps must be greater than 0"
-            return
-        }
-        guard weight >= 0 else {
-            weightError = "Weight cannot be negative"
-            return
-        }
-
-        let hitPR = PRCalculator.isPR(exerciseName: trimmedName, weight: weight, in: workouts)
-
-        workouts.append(Workout(exerciseName: trimmedName, sets: sets, reps: reps, weight: weight))
+        workouts.append(workout)
         saveWorkouts()
 
         if hitPR {
-            prBannerMessage = "\(trimmedName): \(String(format: "%.1f", weight)) lbs"
+            prBannerMessage = "\(workout.exerciseName): \(String(format: "%.1f", workout.weight)) lbs"
             showPRBanner = true
             UINotificationFeedbackGenerator().notificationOccurred(.success)
         }
-
-        name = ""; setsText = ""; repsText = ""; weightText = ""
     }
 
     private func confirmDelete() {
@@ -246,36 +294,10 @@ struct WorkoutView: View {
     }
 }
 
-private struct WorkoutAlerts: ViewModifier {
-    @Binding var showInvalidNumberAlert: Bool
-    @Binding var workoutPendingDelete: Workout?
-    @Binding var showPRBanner: Bool
-    let prBannerMessage: String
-    let onConfirmDelete: () -> Void
-
-    func body(content: Content) -> some View {
-        content
-            .alert("Please enter valid numbers.", isPresented: $showInvalidNumberAlert) {
-                Button("OK", role: .cancel) {}
-            }
-            .alert(
-                "Delete Workout",
-                isPresented: Binding(
-                    get: { workoutPendingDelete != nil },
-                    set: { if !$0 { workoutPendingDelete = nil } }
-                )
-            ) {
-                Button("Cancel", role: .cancel) { workoutPendingDelete = nil }
-                Button("Delete", role: .destructive) { onConfirmDelete() }
-            } message: {
-                Text("Are you sure you want to delete this workout?")
-            }
-            .alert("New Personal Record! 🎉", isPresented: $showPRBanner) {
-                Button("Nice!", role: .cancel) {}
-            } message: {
-                Text(prBannerMessage)
-            }
-    }
+private struct ProgramExerciseLogTarget: Identifiable {
+    let index: Int
+    let exercise: ProgramExercise
+    var id: UUID { exercise.id }
 }
 
 private struct EditWorkoutSheet: View {
@@ -351,4 +373,5 @@ private struct EditWorkoutSheet: View {
 
 #Preview {
     WorkoutView()
+        .environmentObject(ProgramRunner())
 }

@@ -31,6 +31,19 @@ enum CSVExporter {
         }
         return csvText
     }
+    
+    static func generateRunningPRsCSV(from records: [ActivityRecord]) -> String {
+        var csvText = "Distance,Time,Pace,Date\n"
+        let prs = RunningPRCalculator.calculate(from: records)
+
+        for pr in prs {
+            let dateString = pr.date.formatted(date: .abbreviated, time: .omitted)
+            csvText.append("\(pr.distance.name),\(pr.timeFormatted),\(pr.paceFormatted),\(dateString)\n")
+        }
+
+        return csvText
+    }
+    
 
     static func writeCSVToTempFile(_ csvText: String, filename: String) -> URL? {
         let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
