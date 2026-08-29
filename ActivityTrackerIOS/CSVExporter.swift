@@ -44,6 +44,36 @@ enum CSVExporter {
         return csvText
     }
     
+    static func generatePlannedWorkoutCSV(from programs: [Program]) -> String {
+        var csvText = "Scheduled Date,Program,Exercise,Sets,Reps,Weight (lbs)\n"
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+
+        let sortedPrograms = programs.sorted {
+            ($0.scheduledDate ?? .distantFuture) <
+            ($1.scheduledDate ?? .distantFuture)
+        }
+
+        for program in sortedPrograms {
+            let dateString = program.scheduledDate
+                .map { formatter.string(from: $0) } ?? ""
+
+            for exercise in program.exercises {
+                let programName = program.name
+                    .replacingOccurrences(of: ",", with: " ")
+
+                let exerciseName = exercise.exerciseName
+                    .replacingOccurrences(of: ",", with: " ")
+
+                csvText.append(
+                    "\(dateString),\(programName),\(exerciseName),\(exercise.sets),\(exercise.reps),\(exercise.weight)\n"
+                )
+            }
+        }
+
+        return csvText
+    }
 
     static func writeCSVToTempFile(_ csvText: String, filename: String) -> URL? {
         let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(filename)

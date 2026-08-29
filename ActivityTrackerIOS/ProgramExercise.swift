@@ -1,16 +1,3 @@
-//
-//  ProgramExercise.swift
-//  ActivityTrackerIOS
-//
-//  Created by Alexis Newell on 2026-08-05.
-//
-
-
-//
-//  Program.swift
-//  ActivityTrackerIOS
-//
-
 import Foundation
 
 /// A single planned exercise inside a Program (target, not a logged result).
@@ -27,16 +14,22 @@ struct Program: Identifiable, Codable {
     var id = UUID()
     var name: String
     var exercises: [ProgramExercise]
+    var scheduledDate: Date? = nil
 }
 
 enum ProgramStore {
+
     private static let storageKey = "program_list"
 
     static func load() -> [Program] {
         guard let data = UserDefaults.standard.data(forKey: storageKey),
-              let decoded = try? JSONDecoder().decode([Program].self, from: data) else {
+              let decoded = try? JSONDecoder().decode(
+                  [Program].self,
+                  from: data
+              ) else {
             return []
         }
+
         return decoded
     }
 

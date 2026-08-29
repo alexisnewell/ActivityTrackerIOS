@@ -6,7 +6,7 @@ struct HomeView: View {
 
     @State private var workouts: [Workout] = []
     private let storageKey = "workout_list"
-
+    @State private var programs: [Program] = []
     @Query(sort: \DailySteps.date, order: .reverse)
     private var stepHistory: [DailySteps]
     
@@ -17,41 +17,66 @@ struct HomeView: View {
         VStack(spacing: 24) {
             titleView
             subtitleView
-            homeCard(title: "Start Activity",
-                     iconName: "",
-                     systemFallback: "play.fill",
-                     tab: .activityTracker,
-                     iconColor: Color(hex: "8c52ff")
-                     )
-            homeCard(
-                title: "Steps",
-                iconName: "step_logo",
-                systemFallback: "figure.walk",
-                tab: .steps
-            )
-            homeCard(
-                title: "Workouts",
-                iconName: "weights_logo",
-                systemFallback: "dumbbell",
-                tab: .workouts
-            )
-            homeCard(title: "Programs",
-                     iconName: "program_logo",
-                     systemFallback:"list.bullet.rectangle",
-                     tab: .programs
-            )
+            HStack(spacing: 10) {
+                homeCard(
+                    title: "Start Activity",
+                    iconName: "",
+                    systemFallback: "play.fill",
+                    tab: .activityTracker,
+                    iconColor: Color(hex: "8c52ff")
+                )
+                homeCard(
+                    title: "Steps",
+                    iconName: "step_logo",
+                    systemFallback: "figure.walk",
+                    tab: .steps
+                )
+                homeCard(
+                    title: "Workouts",
+                    iconName: "weights_logo",
+                    systemFallback: "dumbbell",
+                    tab: .workouts
+                )
+                homeCard(
+                    title: "Programs",
+                    iconName: "program_logo",
+                    systemFallback: "list.bullet.rectangle",
+                    tab: .programs
+                )
+            }
             Spacer()
-            ExportButton(workouts: workouts, stepHistory: stepHistory, activityRecords: activityRecords)
-                .foregroundColor(.white)
+            ScrollView(.vertical, showsIndicators: true) {
+                WorkoutCalendarView(
+                    workouts: workouts
+                )
+                .frame(maxWidth: .infinity)
+            }
+            .frame(maxHeight: 400)
+            HStack(spacing: 5) {
+                  Image(systemName: "arrow.up.and.down")
+                  Text("Scroll to view workout details")
+              }
+              .font(.caption)
+              .foregroundColor(.gray)
+            ExportButton(
+                workouts: workouts,
+                stepHistory: stepHistory,
+                activityRecords: activityRecords,
+                programs: programs
+            )
+            .foregroundColor(.white)
             Spacer()
         }
         .padding(.top, 64)
-        .padding(.horizontal, 32)
+        .padding(.horizontal, 16)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black.opacity(0.92))
-        .onAppear(perform: loadWorkouts)
+        .onAppear {
+            loadWorkouts()
+            loadPrograms()
+        }
     }
-
+    
     private var titleView: some View {
         Text("Activity Tracker")
             .font(.title).bold()
@@ -64,19 +89,33 @@ struct HomeView: View {
             .foregroundColor(.gray)
     }
 
-    private func homeCard(title: String, iconName: String, systemFallback: String, tab: AppTab, iconColor: Color? = nil) -> some View {
+    private func homeCard(
+        title: String,
+        iconName: String,
+        systemFallback: String,
+        tab: AppTab,
+        iconColor: Color? = nil
+    ) -> some View {
+
         Button {
             selectedTab = tab
         } label: {
-            VStack(spacing: 8) {
-                logoImage(named: iconName, systemFallback: systemFallback, iconColor: iconColor ?? .white)
-                    .frame(width: 40, height: 40)
+            VStack(spacing: 6) {
+
+                logoImage(
+                    named: iconName,
+                    systemFallback: systemFallback,
+                    iconColor: iconColor ?? .white
+                )
+                .frame(width: 32, height: 32)
+
                 Text(title)
-                    .font(.title3).bold()
+                    .font(.caption)
+                    .bold()
                     .foregroundColor(.white)
+                    .lineLimit(1)
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: 110)
+            .frame(width: 90, height: 90)
             .background(Color(white: 0.12))
             .cornerRadius(16)
         }
@@ -103,6 +142,18 @@ struct HomeView: View {
             return
         }
         workouts = decoded
+    }
+    private func loadPrograms() {
+        programs = ProgramStore.load()
+
+        print("Loaded programs: \(programs.count)")
+
+        for program in programs {
+            print("Program: \(program.name)")
+            print("Scheduled: \(String(describing: program.scheduledDate))")
+            print("Exercises: \(program.exercises.count)")
+            
+        }
     }
 }
 

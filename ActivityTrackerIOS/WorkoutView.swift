@@ -38,9 +38,18 @@ struct WorkoutView: View {
                 } message: {
                     Text("Are you sure you want to delete this workout?")
                 }
-                .sheet(item: $workoutBeingEdited) { workout in
-                    EditWorkoutSheet(workout: workout) { updated in
-                        saveEdit(updated)
+                .sheet(item: $exerciseBeingLogged) { target in
+                    LogExerciseSheet(exercise: target.exercise) { workout in
+
+                        var completedWorkout = workout
+
+                        if let program = programRunner.activeProgram {
+                            completedWorkout.programID = program.id
+                        }
+
+                        logWorkout(completedWorkout)
+
+                        programRunner.markLogged(index: target.index)
                     }
                 }
                 .sheet(isPresented: $showProgramPicker) {
@@ -116,8 +125,6 @@ struct WorkoutView: View {
             .font(.title2).bold()
             .frame(maxWidth: .infinity, alignment: .leading)
     }
-
-    // MARK: - Program section
 
     private var noActiveProgramCard: some View {
         VStack(spacing: 8) {

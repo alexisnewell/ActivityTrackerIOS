@@ -75,24 +75,52 @@ struct ProgramListView: View {
     }
 
     private func programRow(_ program: Program) -> some View {
+
         VStack(alignment: .leading, spacing: 6) {
-            Text(program.name).font(.headline)
+
+            Text(program.name)
+                .font(.headline)
+
             Text("\(program.exercises.count) exercises")
                 .font(.caption)
                 .foregroundColor(.secondary)
+
+            if let date = program.scheduledDate {
+
+                HStack(spacing: 5) {
+
+                    Image(systemName: "calendar")
+
+                    Text(
+                        date.formatted(
+                            .dateTime
+                                .month(.abbreviated)
+                                .day()
+                                .year()
+                        )
+                    )
+                }
+                .font(.caption)
+                .foregroundColor(Color(hex: "8c52ff"))
+            }
+
             HStack {
-                Button("Run") {
+
+                Button("Start") {
+
                     onRunProgram(program)
                     dismiss()
                 }
                 .buttonStyle(.borderedProminent)
 
                 Button("Edit") {
+
                     programBeingEdited = program
                 }
                 .buttonStyle(.bordered)
 
                 Button("Delete") {
+
                     programPendingDelete = program
                 }
                 .buttonStyle(.bordered)

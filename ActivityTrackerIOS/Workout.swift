@@ -15,7 +15,7 @@ struct Workout: Identifiable, Codable {
     var reps: Int
     var weight: Double
     var date: Date = Date()
-
+    var programID: UUID? = nil
     var details: String {
         "Sets: \(sets) | Reps: \(reps) | Weight: \(String(format: "%.1f", weight)) lbs"
     }
