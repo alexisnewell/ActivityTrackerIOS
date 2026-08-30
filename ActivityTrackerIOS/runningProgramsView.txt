@@ -1,0 +1,13 @@
+private var runningProgramsView: some View {
+    List {
+        if runningPrograms.isEmpty {
+            Text("No running programs yet.\nTap + to create one.")
+                .multilineTextAlignment(.center)
+                .foregroundColor(.gray)
+        } else {
+            ForEach(runningPrograms) { program in
+                Text(program.name)
+            }
+        }
+    }
+}
