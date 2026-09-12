@@ -4,6 +4,7 @@ struct WorkoutCalendarView: View {
 
     let workouts: [Workout]
     @State private var programs: [Program] = []
+    @State private var runningPrograms: [RunningProgram] = []
 
     @State private var selectedDate = Date()
 
@@ -54,6 +55,13 @@ struct WorkoutCalendarView: View {
         ) - 1
     }
 
+    private var scheduledRunningWorkouts: [RunningWorkout] {
+
+        runningPrograms
+            .flatMap { $0.workouts }
+            .filter { $0.scheduledDate != nil }
+    }
+
     private var selectedDayWorkouts: [Workout] {
 
         workouts.filter {
@@ -69,6 +77,21 @@ struct WorkoutCalendarView: View {
         programs.filter { program in
 
             guard let scheduledDate = program.scheduledDate else {
+                return false
+            }
+
+            return calendar.isDate(
+                scheduledDate,
+                inSameDayAs: selectedDate
+            )
+        }
+    }
+
+    private var selectedDayRunningWorkouts: [RunningWorkout] {
+
+        scheduledRunningWorkouts.filter { workout in
+
+            guard let scheduledDate = workout.scheduledDate else {
                 return false
             }
 
@@ -162,6 +185,7 @@ struct WorkoutCalendarView: View {
         }
         .onAppear {
             programs = ProgramStore.load()
+            runningPrograms = RunningProgramStore.load()
         }
         .padding(18)
         .background(Color(white: 0.08))
@@ -190,9 +214,22 @@ struct WorkoutCalendarView: View {
             )
         }
 
+        let hasPlannedRunningWorkout = scheduledRunningWorkouts.contains { workout in
+
+            guard let scheduledDate = workout.scheduledDate else {
+                return false
+            }
+
+            return calendar.isDate(
+                scheduledDate,
+                inSameDayAs: date
+            )
+        }
+
         let hasWorkout =
             hasCompletedWorkout ||
-            hasPlannedWorkout
+            hasPlannedWorkout ||
+            hasPlannedRunningWorkout
 
         let isSelected = calendar.isDate(
             date,
@@ -283,8 +320,32 @@ struct WorkoutCalendarView: View {
                     }
                 }
             }
+        }
+        if !selectedDayRunningWorkouts.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Planned Runs")
+                    .font(.headline)
+                    .foregroundColor(.orange)
+                ForEach(selectedDayRunningWorkouts) { workout in
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(workout.name)
+                            .bold()
+                            .foregroundColor(.white)
+                        ForEach(workout.intervals) { interval in
 
-        } else {
+                            Text(
+                                "\(interval.repetitions)x\(intervalSummary(interval))"
+                            )
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                        }
+                    }
+                }
+            }
+        }
+        if selectedDayWorkouts.isEmpty &&
+            selectedDayPrograms.isEmpty &&
+            selectedDayRunningWorkouts.isEmpty {
 
             HStack {
 
@@ -297,6 +358,22 @@ struct WorkoutCalendarView: View {
                 Spacer()
             }
         }
+    }
+
+    private func intervalSummary(_ interval: RunningInterval) -> String {
+
+        if let distance = interval.distance {
+            return distance >= 1000
+                ? String(format: "%.2fkm", distance / 1000)
+                : String(format: "%.0fm", distance)
+        }
+
+        if let duration = interval.duration {
+            let totalSeconds = Int(duration)
+            return String(format: "%d:%02d", totalSeconds / 60, totalSeconds % 60)
+        }
+
+        return "?"
     }
 
     private func changeMonth(by value: Int) {

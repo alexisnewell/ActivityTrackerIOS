@@ -2,6 +2,14 @@
 //  RunningProgramRecorderView.swift
 //  ActivityTrackerIOS
 //
+//  Created by Alexis Newell on 2026-08-30.
+//
+
+
+//
+//  RunningProgramRecorderView.swift
+//  ActivityTrackerIOS
+//
 
 import SwiftUI
 import SwiftData
