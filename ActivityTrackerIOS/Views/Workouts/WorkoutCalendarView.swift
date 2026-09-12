@@ -5,6 +5,7 @@ struct WorkoutCalendarView: View {
     let workouts: [Workout]
     @State private var programs: [Program] = []
     @State private var runningPrograms: [RunningProgram] = []
+    @State private var combinedPrograms: [CombinedProgram] = []
 
     @State private var selectedDate = Date()
 
@@ -102,6 +103,10 @@ struct WorkoutCalendarView: View {
         }
     }
 
+    private var selectedDayCombinedEntries: [(program: CombinedProgram, day: CombinedProgramDay)] {
+        combinedDayEntries(for: selectedDate)
+    }
+
     var body: some View {
 
         VStack(alignment: .leading, spacing: 16) {
@@ -186,6 +191,7 @@ struct WorkoutCalendarView: View {
         .onAppear {
             programs = ProgramStore.load()
             runningPrograms = RunningProgramStore.load()
+            combinedPrograms = CombinedProgramStore.load()
         }
         .padding(18)
         .background(Color(white: 0.08))
@@ -226,10 +232,13 @@ struct WorkoutCalendarView: View {
             )
         }
 
+        let hasPlannedCombinedWorkout = !combinedDayEntries(for: date).isEmpty
+
         let hasWorkout =
             hasCompletedWorkout ||
             hasPlannedWorkout ||
-            hasPlannedRunningWorkout
+            hasPlannedRunningWorkout ||
+            hasPlannedCombinedWorkout
 
         let isSelected = calendar.isDate(
             date,
@@ -343,9 +352,37 @@ struct WorkoutCalendarView: View {
                 }
             }
         }
+        if !selectedDayCombinedEntries.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Combined Plans")
+                    .font(.headline)
+                    .foregroundColor(.pink)
+
+                ForEach(selectedDayCombinedEntries, id: \.program.id) { entry in
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(entry.program.name)
+                            .bold()
+                            .foregroundColor(.white)
+
+                        if let strengthProgram = entry.day.strengthProgram {
+                            Label(strengthProgram.name, systemImage: "dumbbell.fill")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+
+                        if let runningWorkout = entry.day.runningWorkout {
+                            Label(runningWorkout.name, systemImage: "figure.run")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                    }
+                }
+            }
+        }
         if selectedDayWorkouts.isEmpty &&
             selectedDayPrograms.isEmpty &&
-            selectedDayRunningWorkouts.isEmpty {
+            selectedDayRunningWorkouts.isEmpty &&
+            selectedDayCombinedEntries.isEmpty {
 
             HStack {
 
@@ -374,6 +411,36 @@ struct WorkoutCalendarView: View {
         }
 
         return "?"
+    }
+
+    // MARK: - Combined Programs (tied to one specific week)
+
+    /// Finds combined-program days that fall on `date`, matched against each
+    /// program's own `weekStartDate` — so a plan only appears during the
+    /// single week it was scheduled for, not every week.
+    private func combinedDayEntries(for date: Date) -> [(program: CombinedProgram, day: CombinedProgramDay)] {
+
+        let targetDay = calendar.startOfDay(for: date)
+
+        return combinedPrograms.compactMap { program in
+
+            let weekStart = calendar.startOfDay(for: program.weekStartDate)
+
+            guard let offset = calendar.dateComponents(
+                [.day],
+                from: weekStart,
+                to: targetDay
+            ).day, offset >= 0, offset < program.days.count else {
+                return nil
+            }
+
+            let day = program.days[offset]
+
+            guard !day.isRestDay else { return nil }
+            guard day.strengthProgram != nil || day.runningWorkout != nil else { return nil }
+
+            return (program, day)
+        }
     }
 
     private func changeMonth(by value: Int) {

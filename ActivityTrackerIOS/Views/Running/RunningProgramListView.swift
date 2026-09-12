@@ -13,24 +13,41 @@ struct RunningProgramListView: View {
     @State private var showNewProgramSheet = false
 
     var body: some View {
-        List {
-            if programs.isEmpty {
-                Text("No running programs yet.\nTap + to create one.")
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.gray)
-            } else {
-                ForEach(programs) { program in
-                    programRow(program)
-                }
-            }
-        }
-        .navigationTitle("Running Programs")
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+        VStack(spacing: 0) {
+
+            // MARK: - Header
+
+            HStack {
+                Text("Running Programs")
+                    .font(.headline)
+
+                Spacer()
+
                 Button {
                     showNewProgramSheet = true
                 } label: {
                     Image(systemName: "plus")
+                        .font(.system(size: 16, weight: .semibold))
+                }
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 10)
+
+            Divider()
+
+            // MARK: - Rows
+
+            if programs.isEmpty {
+                Text("No running programs yet.\nTap + to create one.")
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.gray)
+                    .padding(.top, 24)
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(programs) { program in
+                        programRow(program)
+                        Divider()
+                    }
                 }
             }
         }
@@ -78,7 +95,9 @@ struct RunningProgramListView: View {
                 .tint(.red)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 8)
+        .padding(.horizontal)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func loadPrograms() {

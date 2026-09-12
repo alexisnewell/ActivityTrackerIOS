@@ -1,3 +1,11 @@
+//
+//  CombinedProgramDayItem.swift
+//  ActivityTrackerIOS
+//
+//  Created by Alexis Newell on 2026-09-09.
+//
+
+
 import Foundation
 
 /// What was tapped when starting something from a combined program day.

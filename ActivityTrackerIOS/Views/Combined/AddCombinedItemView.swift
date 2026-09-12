@@ -1,3 +1,11 @@
+//
+//  AddCombinedItemView.swift
+//  ActivityTrackerIOS
+//
+//  Created by Alexis Newell on 2026-09-08.
+//
+
+
 import SwiftUI
 
 struct AddCombinedItemView: View {

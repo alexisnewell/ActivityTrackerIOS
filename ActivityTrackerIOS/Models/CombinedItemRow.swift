@@ -2,6 +2,14 @@
 //  CombinedItemRow.swift
 //  ActivityTrackerIOS
 //
+//  Created by Alexis Newell on 2026-09-08.
+//
+
+
+//
+//  CombinedItemRow.swift
+//  ActivityTrackerIOS
+//
 
 import SwiftUI
 
@@ -24,4 +32,12 @@ struct CombinedItemRow: View {
             DatePicker(
                 "",
                 selection: Binding(
-                    get: { item.scheduledDate ??
+                    get: { item.scheduledDate ?? Date() },
+                    set: { item.scheduledDate = $0 }
+                ),
+                displayedComponents: .date
+            )
+            .labelsHidden()
+        }
+    }
+}

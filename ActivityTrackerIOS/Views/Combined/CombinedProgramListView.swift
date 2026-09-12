@@ -1,69 +1,132 @@
-//
-//  CombinedProgramListView.swift
-//  ActivityTrackerIOS
-//
-//  Created by Alexis Newell on 2026-09-08.
-//
-
+import SwiftUI
 
 struct CombinedProgramListView: View {
     var programs: [CombinedProgram]
     var onCreateNew: () -> Void
-    var onStartItem: (CombinedProgramItem) -> Void
+    var onEditProgram: (CombinedProgram) -> Void
+    var onStartItem: (CombinedProgramDayItem) -> Void
+
+    private static let weekdayNames = [
+        "Monday", "Tuesday", "Wednesday", "Thursday",
+        "Friday", "Saturday", "Sunday"
+    ]
 
     var body: some View {
-        List {
-            ForEach(programs) { program in
-                Section(program.name) {
-                    ForEach(program.items) { item in
-                        Button {
-                            onStartItem(item)
-                        } label: {
-                            CombinedItemSummaryRow(item: item)
-                        }
-                    }
+        VStack(spacing: 0) {
+
+            // MARK: - Header
+
+            HStack {
+                Text("Combined Programs")
+                    .font(.headline)
+
+                Spacer()
+
+                Button {
+                    onCreateNew()
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 16, weight: .semibold))
                 }
             }
+            .padding(.horizontal)
+            .padding(.vertical, 10)
+
+            Divider()
+
+            // MARK: - Rows
 
             if programs.isEmpty {
                 ContentUnavailableView(
                     "No Combined Plans Yet",
                     systemImage: "figure.mixed.cardio",
-                    description: Text("Create a plan that mixes running and strength sessions.")
+                    description: Text(
+                        "Create a plan that mixes running and strength sessions."
+                    )
                 )
-            }
-        }
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    onCreateNew()
-                } label: {
-                    Label("New Plan", systemImage: "plus")
+                .padding(.top, 24)
+            } else {
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(programs) { program in
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack {
+                                Text(program.name)
+                                    .font(.headline)
+
+                                Spacer()
+
+                                Button("Edit") {
+                                    onEditProgram(program)
+                                }
+                                .font(.caption)
+                            }
+
+                            Text(weekRangeLabel(for: program))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.horizontal)
+                        .padding(.top, 12)
+                        .padding(.bottom, 6)
+
+                        ForEach(Array(program.days.enumerated()), id: \.element.id) { index, day in
+                            dayRow(index: index, day: day)
+                            Divider()
+                                .padding(.leading)
+                        }
+                    }
                 }
             }
         }
     }
-}
 
-struct CombinedItemSummaryRow: View {
-    var item: CombinedProgramItem
+    // MARK: - Week label
 
-    var body: some View {
-        HStack {
-            switch item.kind {
-            case .strength(let program):
-                Label(program.name, systemImage: "dumbbell")
-            case .running:
-                Label("Run", systemImage: "figure.run") // swap in workout.name if available
-            case .rest:
-                Label("Rest", systemImage: "moon.zzz")
-            }
-            Spacer()
-            if let date = item.scheduledDate {
-                Text(date, style: .date)
-                    .font(.caption)
+    private func weekRangeLabel(for program: CombinedProgram) -> String {
+        let format = Date.FormatStyle.dateTime.month(.abbreviated).day()
+        return "\(program.weekStartDate.formatted(format)) – \(program.weekEndDate.formatted(format))"
+    }
+
+    // MARK: - Day Row
+
+    private func dayRow(index: Int, day: CombinedProgramDay) -> some View {
+
+        VStack(alignment: .leading, spacing: 4) {
+
+            Text(Self.weekdayNames[index])
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            if day.isRestDay {
+
+                Text("Rest")
                     .foregroundStyle(.secondary)
+
+            } else {
+
+                VStack(alignment: .leading, spacing: 4) {
+
+                    if let program = day.strengthProgram {
+                        Button {
+                            onStartItem(.strength(program))
+                        } label: {
+                            Label(program.name, systemImage: "dumbbell.fill")
+                        }
+                    }
+
+                    if let workout = day.runningWorkout {
+                        Button {
+                            onStartItem(.running(workout))
+                        } label: {
+                            Label(workout.name, systemImage: "figure.run")
+                        }
+                    }
+                }
             }
         }
+        .padding(.horizontal)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

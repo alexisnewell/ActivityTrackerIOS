@@ -35,18 +35,7 @@ struct RootView: View {
                 }
                 .tag(AppTab.workouts)
 
-            NavigationStack {
-                ProgramListView(
-                    onRunProgram: { _ in
-                        // Selecting a program from the tab bar just shows the list;
-                        // running one switches to Workouts where the run flow lives.
-                        selectedTab = .workouts
-                    },
-                    onRecordRunningProgram: { program in
-                        recordingProgram = program
-                    }
-                )
-            }
+            ProgramsView(selectedTab: $selectedTab)
                 .tabItem {
                     Label("Programs", systemImage: "list.bullet.rectangle")
                 }

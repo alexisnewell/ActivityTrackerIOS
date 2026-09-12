@@ -1,78 +1,186 @@
-//
-//  CombinedProgramBuilderView.swift
-//  ActivityTrackerIOS
-//
-//  Created by Alexis Newell on 2026-09-08.
-//
 import SwiftUI
 
 struct CombinedProgramBuilderView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var name = ""
-    @State private var weeks = 4
-    @State private var days: [CombinedProgramDay] = []
+
+    let availableStrengthPrograms: [Program]
+    let availableRunningWorkouts: [RunningWorkout]
+    let existingProgram: CombinedProgram?
+    let onSave: (CombinedProgram) -> Void
+
+    @State private var name: String
+    @State private var days: [CombinedProgramDay]
+    @State private var weekStartDate: Date
+
+    private static let weekdayNames = [
+        "Monday", "Tuesday", "Wednesday", "Thursday",
+        "Friday", "Saturday", "Sunday"
+    ]
+
+    init(
+        availableStrengthPrograms: [Program],
+        availableRunningWorkouts: [RunningWorkout],
+        existingProgram: CombinedProgram? = nil,
+        onSave: @escaping (CombinedProgram) -> Void
+    ) {
+        self.availableStrengthPrograms = availableStrengthPrograms
+        self.availableRunningWorkouts = availableRunningWorkouts
+        self.existingProgram = existingProgram
+        self.onSave = onSave
+
+        _name = State(initialValue: existingProgram?.name ?? "")
+
+        // Always work with exactly 7 slots, Monday through Sunday.
+        if let existingDays = existingProgram?.days, existingDays.count == 7 {
+            _days = State(initialValue: existingDays)
+        } else {
+            _days = State(
+                initialValue: (0..<7).map { _ in CombinedProgramDay() }
+            )
+        }
+
+        _weekStartDate = State(
+            initialValue: CombinedProgram.mondayStartOfWeek(
+                for: existingProgram?.weekStartDate ?? Date()
+            )
+        )
+    }
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Plan Details") {
+            List {
+                Section("Name") {
                     TextField("Plan name", text: $name)
-                    Stepper("Duration: \(weeks) weeks", value: $weeks, in: 1...52)
                 }
 
-                Section("Weekly Schedule") {
-                    ForEach($days) { $day in
-                        DayRow(day: $day)
+                Section("Week") {
+                    DatePicker(
+                        "Week Starting",
+                        selection: $weekStartDate,
+                        displayedComponents: .date
+                    )
+                    .onChange(of: weekStartDate) { newValue in
+                        // Always snap back to that week's Monday, no matter what
+                        // day the user tapped in the picker.
+                        let monday = CombinedProgram.mondayStartOfWeek(for: newValue)
+                        if !Calendar.current.isDate(monday, inSameDayAs: weekStartDate) {
+                            weekStartDate = monday
+                        }
                     }
-                    Button("Add Day") {
-                        days.append(CombinedProgramDay(dayOfWeek: days.count + 1, kind: .rest))
+
+                    Text(weekRangeLabel)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Section("Days") {
+                    ForEach(Array(days.indices), id: \.self) { index in
+                        dayRow(index: index)
                     }
                 }
             }
-            .navigationTitle("New Combined Plan")
+            .navigationTitle(existingProgram == nil ? "New Combined Program" : "Edit Combined Program")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        // build CombinedProgram(name:, weeks:, days:) and persist
+                    Button("Cancel") {
                         dismiss()
                     }
-                    .disabled(name.isEmpty || days.isEmpty)
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        let program = CombinedProgram(
+                            id: existingProgram?.id ?? UUID(),
+                            name: name,
+                            days: days,
+                            weekStartDate: weekStartDate
+                        )
+
+                        onSave(program)
+                        dismiss()
+                    }
+                    .disabled(name.isEmpty)
                 }
             }
         }
     }
-}
 
-struct DayRow: View {
-    @Binding var day: CombinedProgramDay
+    // MARK: - Week label
 
-    var body: some View {
-        Picker("Day \(day.dayOfWeek)", selection: Binding(
-            get: { dayKindTag(day.kind) },
-            set: { newTag in day.kind = defaultKind(for: newTag) }
-        )) {
-            Text("Rest").tag(0)
-            Text("Strength").tag(1)
-            Text("Running").tag(2)
+    private var weekRangeLabel: String {
+        let monday = weekStartDate
+        let sunday = Calendar.current.date(byAdding: .day, value: 6, to: monday) ?? monday
+
+        let format = Date.FormatStyle.dateTime.month(.abbreviated).day()
+        return "\(monday.formatted(format)) – \(sunday.formatted(format))"
+    }
+
+    // MARK: - Day Row
+
+    private func dayRow(index: Int) -> some View {
+
+        VStack(alignment: .leading, spacing: 8) {
+
+            Text(Self.weekdayNames[index])
+                .font(.subheadline.weight(.semibold))
+
+            HStack {
+                strengthMenu(index: index)
+                runningMenu(index: index)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    private func strengthMenu(index: Int) -> some View {
+        Menu {
+            Button("None") {
+                days[index].strengthProgram = nil
+            }
+
+            ForEach(availableStrengthPrograms) { program in
+                Button(program.name) {
+                    days[index].strengthProgram = program
+                }
+            }
+        } label: {
+            pillLabel(
+                icon: "dumbbell.fill",
+                text: days[index].strengthProgram?.name ?? "Strength: None"
+            )
         }
     }
 
-    private func dayKindTag(_ kind: ProgramDayKind) -> Int {
-        switch kind {
-        case .rest: return 0
-        case .strength: return 1
-        case .running: return 2
+    private func runningMenu(index: Int) -> some View {
+        Menu {
+            Button("None") {
+                days[index].runningWorkout = nil
+            }
+
+            ForEach(availableRunningWorkouts) { workout in
+                Button(workout.name) {
+                    days[index].runningWorkout = workout
+                }
+            }
+        } label: {
+            pillLabel(
+                icon: "figure.run",
+                text: days[index].runningWorkout?.name ?? "Running: None"
+            )
         }
     }
 
-    private func defaultKind(for tag: Int) -> ProgramDayKind {
-        switch tag {
-        case 1: return .strength(ProgramExercise)
-        case 2: return .running(RunningProgram)
-        default: return .rest
+    private func pillLabel(icon: String, text: String) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.caption2)
+            Text(text)
+                .font(.caption)
+                .lineLimit(1)
         }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(Color.secondary.opacity(0.15))
+        .clipShape(Capsule())
     }
 }

@@ -1,13 +1,10 @@
-//
-//  ProgramListView.swift
-//  ActivityTrackerIOS
-//
-
 import SwiftUI
 
 struct ProgramListView: View {
+
     @Environment(\.dismiss) private var dismiss
 
+    var showAddButton: Bool = true
     let onRunProgram: (Program) -> Void
     let onRecordRunningProgram: (RunningProgram) -> Void
 
@@ -16,70 +13,97 @@ struct ProgramListView: View {
     @State private var showNewProgramSheet = false
     @State private var programPendingDelete: Program?
 
-    @State private var runningPrograms: [RunningProgram] = []
-    @State private var runningProgramBeingEdited: RunningProgram?
-    @State private var showNewRunningProgramSheet = false
-
-    @State private var selectedProgramType: ProgramType = .strength
-
     var body: some View {
+
         VStack(spacing: 0) {
 
-            Picker("Program Type", selection: $selectedProgramType) {
-                Text("Strength")
-                    .tag(ProgramType.strength)
+            // MARK: - Header
 
-                Text("Running")
-                    .tag(ProgramType.running)
-            }
-            .pickerStyle(.segmented)
-            .padding()
+            HStack {
 
-            if selectedProgramType == .strength {
-                strengthProgramsView
-            } else {
-                runningProgramsView
-            }
-        }
-        .navigationTitle("Programs")
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    if selectedProgramType == .strength {
+                Text("Strength Programs")
+                    .font(.headline)
+
+                Spacer()
+
+                if showAddButton {
+                    Button {
                         showNewProgramSheet = true
-                    } else {
-                        showNewRunningProgramSheet = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.system(size: 16, weight: .semibold))
                     }
-                } label: {
-                    Image(systemName: "plus")
+                }
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 10)
+
+            Divider()
+
+            // MARK: - Rows
+
+            if programs.isEmpty {
+
+                Text("No programs yet.\nTap + to create one.")
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.gray)
+                    .padding(.top, 24)
+
+            } else {
+
+                VStack(spacing: 0) {
+                    ForEach(programs) { program in
+                        programRow(program)
+                        Divider()
+                    }
                 }
             }
         }
         .onAppear {
             loadPrograms()
-            loadRunningPrograms()
         }
         .sheet(isPresented: $showNewProgramSheet) {
+
             ProgramEditorView { newProgram in
                 programs.append(newProgram)
                 ProgramStore.save(programs)
             }
         }
-        .sheet(isPresented: $showNewRunningProgramSheet) {
-            RunningProgramEditorView { newProgram in
-                runningPrograms.append(newProgram)
-                RunningProgramStore.save(runningPrograms)
-            }
-        }
-        .sheet(item: $runningProgramBeingEdited) { program in
-            RunningProgramEditorView(existingProgram: program) { updatedProgram in
-                if let index = runningPrograms.firstIndex(where: { $0.id == updatedProgram.id }) {
-                    runningPrograms[index] = updatedProgram
-                    RunningProgramStore.save(runningPrograms)
+        .sheet(item: $programBeingEdited) { program in
+
+            ProgramEditorView(existingProgram: program) { updatedProgram in
+
+                if let index = programs.firstIndex(
+                    where: { $0.id == updatedProgram.id }
+                ) {
+                    programs[index] = updatedProgram
+                    ProgramStore.save(programs)
                 }
             }
         }
+        .alert(
+            "Delete Program?",
+            isPresented: Binding(
+                get: { programPendingDelete != nil },
+                set: { if !$0 { programPendingDelete = nil } }
+            )
+        ) {
+
+            Button("Delete", role: .destructive) {
+                confirmDelete()
+            }
+
+            Button("Cancel", role: .cancel) {
+                programPendingDelete = nil
+            }
+
+        } message: {
+
+            Text("Are you sure you want to delete this program?")
+        }
     }
+
+    // MARK: - Program Row
 
     private func programRow(_ program: Program) -> some View {
 
@@ -114,122 +138,47 @@ struct ProgramListView: View {
             HStack {
 
                 Button("Start") {
-
                     onRunProgram(program)
-                    dismiss()
                 }
                 .buttonStyle(.borderedProminent)
 
                 Button("Edit") {
-
                     programBeingEdited = program
                 }
                 .buttonStyle(.bordered)
 
                 Button("Delete") {
-
                     programPendingDelete = program
                 }
                 .buttonStyle(.bordered)
                 .tint(.red)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 8)
+        .padding(.horizontal)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func runningProgramRow(_ program: RunningProgram) -> some View {
-
-        VStack(alignment: .leading, spacing: 6) {
-
-            Text(program.name)
-                .font(.headline)
-
-            Text(
-                "\(program.workouts.count) workout\(program.workouts.count == 1 ? "" : "s")"
-            )
-            .font(.caption)
-            .foregroundColor(.secondary)
-
-            HStack {
-
-                Button("Record") {
-
-                    onRecordRunningProgram(program)
-                    dismiss()
-                }
-                .buttonStyle(.borderedProminent)
-
-                Button("Edit") {
-
-                    runningProgramBeingEdited = program
-                }
-                .buttonStyle(.bordered)
-
-                Button("Delete") {
-
-                    deleteRunningProgram(program)
-                }
-                .buttonStyle(.bordered)
-                .tint(.red)
-            }
-        }
-        .padding(.vertical, 4)
-    }
+    // MARK: - Data
 
     private func loadPrograms() {
         programs = ProgramStore.load()
     }
-    
-    private func loadRunningPrograms() {
-        runningPrograms = RunningProgramStore.load()
-    }
 
     private func confirmDelete() {
+
         guard let target = programPendingDelete,
-              let index = programs.firstIndex(where: { $0.id == target.id }) else {
+              let index = programs.firstIndex(
+                where: { $0.id == target.id }
+              )
+        else {
             programPendingDelete = nil
             return
         }
+
         programs.remove(at: index)
         programPendingDelete = nil
-        ProgramStore.save(programs)
-    }
 
-    private func deleteRunningProgram(_ program: RunningProgram) {
-        runningPrograms.removeAll { $0.id == program.id }
-        RunningProgramStore.save(runningPrograms)
-    }
-    
-    private enum ProgramType {
-        case strength
-        case running
-    }
-    
-    private var strengthProgramsView: some View {
-        List {
-            if programs.isEmpty {
-                Text("No programs yet.\nTap + to create one.")
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.gray)
-            } else {
-                ForEach(programs) { program in
-                    programRow(program)
-                }
-            }
-        }
-    }
-    
-    private var runningProgramsView: some View {
-        List {
-            if runningPrograms.isEmpty {
-                Text("No running programs yet.\nTap + to create one.")
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.gray)
-            } else {
-                ForEach(runningPrograms) { program in
-                    runningProgramRow(program)
-                }
-            }
-        }
+        ProgramStore.save(programs)
     }
 }

@@ -1,24 +1,64 @@
+//
+//  CombinedDayRow.swift
+//  ActivityTrackerIOS
+//
+
 import SwiftUI
 
 struct CombinedDayRow: View {
     let day: CombinedProgramDay
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(alignment: .top, spacing: 12) {
 
-            // Icon
-            Image(systemName: iconName)
-                .font(.title3)
-                .frame(width: 32)
+            // Icons
+            VStack(spacing: 6) {
+                if day.isRestDay {
+                    Image(systemName: "bed.double")
+                } else {
+                    if day.strengthProgram != nil {
+                        Image(systemName: "dumbbell")
+                    }
+                    if day.runningWorkout != nil {
+                        Image(systemName: "figure.run")
+                    }
+                }
+            }
+            .font(.title3)
+            .frame(width: 32)
 
             // Content
             VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.headline)
 
-                Text(subtitle)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                if day.isRestDay {
+
+                    Text("Rest Day")
+                        .font(.headline)
+
+                    Text("Recovery")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+
+                } else {
+
+                    if let program = day.strengthProgram {
+                        Text(program.name)
+                            .font(.headline)
+
+                        Text("Strength")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    if let workout = day.runningWorkout {
+                        Text(workout.name)
+                            .font(.headline)
+
+                        Text("Running")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
 
                 if let date = day.scheduledDate {
                     Text(date, style: .date)
@@ -30,44 +70,5 @@ struct CombinedDayRow: View {
             Spacer()
         }
         .padding(.vertical, 4)
-    }
-
-    private var iconName: String {
-        switch day.kind {
-        case .strength:
-            return "dumbbell"
-
-        case .running:
-            return "figure.run"
-
-        case .rest:
-            return "bed.double"
-        }
-    }
-
-    private var title: String {
-        switch day.kind {
-        case .strength(let program):
-            return program.name
-
-        case .running(let workout):
-            return workout.name
-
-        case .rest:
-            return "Rest Day"
-        }
-    }
-
-    private var subtitle: String {
-        switch day.kind {
-        case .strength:
-            return "Strength"
-
-        case .running:
-            return "Running"
-
-        case .rest:
-            return "Recovery"
-        }
     }
 }
