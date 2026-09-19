@@ -6,6 +6,7 @@ struct ExportButton: View {
     let stepHistory: [DailySteps]
     let activityRecords: [ActivityRecord]
     let programs: [Program]
+    let combinedPrograms: [CombinedProgram]
     
     @State private var showDateRange = false
     @State private var showOptions = false
@@ -47,11 +48,13 @@ struct ExportButton: View {
             return !filteredWorkouts.isEmpty
 
         case .planned:
-            return !filteredPrograms.isEmpty
+            return !filteredPrograms.isEmpty ||
+                   !filteredCombinedDays.isEmpty
 
         case .both:
             return !filteredWorkouts.isEmpty ||
-                   !filteredPrograms.isEmpty
+                   !filteredPrograms.isEmpty ||
+                   !filteredCombinedDays.isEmpty
         }
     }
     
@@ -228,6 +231,14 @@ struct ExportButton: View {
             return isDateInRange(date)
         }
     }
+
+    /// Every non-rest day from every combined plan, resolved to a concrete
+    /// date and filtered to the selected export range.
+    private var filteredCombinedDays: [CombinedProgram.ScheduledDay] {
+        combinedPrograms
+            .flatMap { $0.scheduledDays }
+            .filter { isDateInRange($0.date) }
+    }
     
     private var filteredSteps: [DailySteps] {
         
@@ -246,6 +257,7 @@ struct ExportButton: View {
     private var hasFilteredData: Bool {
         let hasCompleted = !filteredWorkouts.isEmpty
         let hasPlanned = !filteredPrograms.isEmpty
+        let hasPlannedCombined = !filteredCombinedDays.isEmpty
 
         switch workoutStatus {
         case .completed:
@@ -255,12 +267,14 @@ struct ExportButton: View {
 
         case .planned:
             return hasPlanned ||
+                   hasPlannedCombined ||
                    !filteredSteps.isEmpty ||
                    !filteredActivityRecords.isEmpty
 
         case .both:
             return hasCompleted ||
                    hasPlanned ||
+                   hasPlannedCombined ||
                    !filteredSteps.isEmpty ||
                    !filteredActivityRecords.isEmpty
         }
@@ -293,59 +307,57 @@ struct ExportButton: View {
     }
     
     private func export(_ kind: ExportKind) {
+        print("=== EXPORT DEBUG ===")
+        print("kind: \(kind)")
+        print("workoutStatus: \(workoutStatus)")
+        print("date range: \(startDate) to \(endDate)")
+        print("combinedPrograms.count: \(combinedPrograms.count)")
+        for program in combinedPrograms {
+            print("  - \(program.name), weekStartDate: \(program.weekStartDate)")
+            print("    scheduledDays: \(program.scheduledDays.map { $0.date })")
+        }
+        print("filteredCombinedDays.count: \(filteredCombinedDays.count)")
+        print("=====================")
+
         var urls: [URL] = []
         
-        // Workout exports
+        // Workout exports — one unified file covering completed, planned
+        // program, and planned combined-program rows, filtered by the
+        // selected Workout Status.
         if kind == .workouts || kind == .all {
-            
+
+            let completed: [Workout]
+            let planned: [Program]
+            let plannedCombined: [CombinedProgram.ScheduledDay]
+
             switch workoutStatus {
-                
             case .completed:
-                let csv = CSVExporter.generateWorkoutHistoryCSV(
-                    from: filteredWorkouts
-                )
-                
-                if let url = CSVExporter.writeCSVToTempFile(
-                    csv,
-                    filename: "completed_workouts.csv"
-                ) {
-                    urls.append(url)
-                }
-                
+                completed = filteredWorkouts
+                planned = []
+                plannedCombined = []
+
             case .planned:
-                let csv = CSVExporter.generatePlannedWorkoutCSV(
-                    from: filteredPrograms
-                )
+                completed = []
+                planned = filteredPrograms
+                plannedCombined = filteredCombinedDays
 
-                if let url = CSVExporter.writeCSVToTempFile(
-                    csv,
-                    filename: "planned_workouts.csv"
-                ) {
-                    urls.append(url)
-                }
-                
             case .both:
-                let completedCSV = CSVExporter.generateWorkoutHistoryCSV(
-                    from: filteredWorkouts
-                )
+                completed = filteredWorkouts
+                planned = filteredPrograms
+                plannedCombined = filteredCombinedDays
+            }
 
-                if let url = CSVExporter.writeCSVToTempFile(
-                    completedCSV,
-                    filename: "completed_workouts.csv"
-                ) {
-                    urls.append(url)
-                }
+            let csv = CSVExporter.generateWorkoutHistoryCSV(
+                completedWorkouts: completed,
+                plannedPrograms: planned,
+                plannedCombinedDays: plannedCombined
+            )
 
-                let plannedCSV = CSVExporter.generatePlannedWorkoutCSV(
-                    from: filteredPrograms
-                )
-
-                if let url = CSVExporter.writeCSVToTempFile(
-                    plannedCSV,
-                    filename: "planned_workouts.csv"
-                ) {
-                    urls.append(url)
-                }
+            if let url = CSVExporter.writeCSVToTempFile(
+                csv,
+                filename: "workout_history.csv"
+            ) {
+                urls.append(url)
             }
         }
         

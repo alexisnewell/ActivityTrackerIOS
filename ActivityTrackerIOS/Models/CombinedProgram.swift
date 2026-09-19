@@ -59,4 +59,34 @@ struct CombinedProgram: Identifiable, Codable {
     var weekEndDate: Date {
         Calendar.current.date(byAdding: .day, value: 6, to: weekStartDate) ?? weekStartDate
     }
+
+    // MARK: - Scheduled days
+
+    /// One non-rest day from this plan, resolved to an actual calendar date.
+    struct ScheduledDay {
+        let date: Date
+        let programName: String
+        let day: CombinedProgramDay
+    }
+
+    /// Expands this plan's 7 weekday slots into concrete dated entries,
+    /// skipping rest days and days with nothing scheduled. Used anywhere
+    /// that needs a real `Date` for a combined-program day, such as the
+    /// calendar or CSV export.
+    var scheduledDays: [ScheduledDay] {
+        let calendar = Calendar.current
+
+        return days.indices.compactMap { index -> ScheduledDay? in
+            let day = days[index]
+
+            guard !day.isRestDay else { return nil }
+            guard day.strengthProgram != nil || day.runningWorkout != nil else { return nil }
+
+            guard let date = calendar.date(byAdding: .day, value: index, to: weekStartDate) else {
+                return nil
+            }
+
+            return ScheduledDay(date: date, programName: name, day: day)
+        }
+    }
 }

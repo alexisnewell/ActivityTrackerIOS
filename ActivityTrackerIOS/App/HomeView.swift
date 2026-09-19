@@ -9,6 +9,7 @@ struct HomeView: View {
     @State private var programs: [Program] = []
     @Query(sort: \DailySteps.date, order: .reverse)
     private var stepHistory: [DailySteps]
+    @State private var combinedPrograms: [CombinedProgram] = []
     
     @Query(sort: \ActivityRecord.date, order: .reverse)
     private var activityRecords: [ActivityRecord]
@@ -62,7 +63,8 @@ struct HomeView: View {
                 workouts: workouts,
                 stepHistory: stepHistory,
                 activityRecords: activityRecords,
-                programs: programs
+                programs: programs,
+                combinedPrograms: combinedPrograms
             )
             .foregroundColor(.white)
             Spacer()
@@ -74,6 +76,7 @@ struct HomeView: View {
         .onAppear {
             loadWorkouts()
             loadPrograms()
+            loadCombinedPrograms()
         }
     }
     
@@ -153,6 +156,17 @@ struct HomeView: View {
             print("Scheduled: \(String(describing: program.scheduledDate))")
             print("Exercises: \(program.exercises.count)")
             
+        }
+    }
+    private func loadCombinedPrograms() {
+        combinedPrograms = CombinedProgramStore.load()
+
+        print("Loaded combined programs: \(combinedPrograms.count)")
+
+        for program in combinedPrograms {
+            print("Combined program: \(program.name)")
+            print("Week start: \(program.weekStartDate)")
+            print("Scheduled days: \(program.scheduledDays.count)")
         }
     }
 }
