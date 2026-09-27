@@ -28,6 +28,7 @@ Key Features:
 * **CSV export** for step counts and workout history.
 * **Multi-screen navigation** built with SwiftUI's `TabView` and state-driven navigation.
 * **Persistent local storage** ensuring workout and step data are retained across app launches.
+* **AI-powered workout assistant** using a SwiftUI iOS frontend and a Python/FastAPI backend. The iOS app communicates with the backend through REST APIs, sending and receiving JSON data containing workout requests, workout history, exercises, sets, reps, and recommended weights. The backend uses FastAPI, Pydantic, Python, and a local Ollama/Qwen3:4b to parse user workout requests and generate personalized workouts based on the user's workout history, which is stored locally using Swift/UserDefaults.
 
 Skills Demonstrated:
 
