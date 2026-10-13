@@ -9,7 +9,6 @@
   <tr>
     <td><img src="https://github.com/user-attachments/assets/2d1cca6e-d844-42fc-8af8-bb41b0cd7420" width="180"></td>
     <td><img src="https://github.com/user-attachments/assets/3fbf0d2c-7e3f-4583-9b1e-9355b5ad3159" width="180"></td>
-    <td><img src="https://github.com/user-attachments/assets/ba6adbc1-2cd5-41ef-b9ef-28c60bf090d1" width="180"></td>
   </tr>
 </table>
 
