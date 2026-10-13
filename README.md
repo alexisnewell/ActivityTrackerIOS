@@ -29,7 +29,7 @@ Key Features:
 * **CSV export** for step counts and workout history.
 * **Multi-screen navigation** built with SwiftUI's `TabView` and state-driven navigation.
 * **Persistent local storage** ensuring workout and step data are retained across app launches.
-* ** workout database** The iOS app communicates with the backend through REST APIs, sending and receiving JSON data containing workout requests, workout history, exercises, sets, reps, and recommended weights. The backend uses a database from the following: https://github.com/Glowupp-app/open-exercisedb
+* **Workout database** The iOS app communicates with the backend through REST APIs, sending and receiving JSON data containing workout requests, workout history, exercises, sets, reps, and recommended weights. The backend uses a database from the following: https://github.com/Glowupp-app/open-exercisedb
 
 Skills Demonstrated:
 
