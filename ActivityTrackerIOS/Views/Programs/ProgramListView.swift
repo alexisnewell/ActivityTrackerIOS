@@ -141,7 +141,7 @@ struct ProgramListView: View {
                     onRunProgram(program)
                 }
                 .buttonStyle(.borderedProminent)
-
+ 
                 Button("Edit") {
                     programBeingEdited = program
                 }

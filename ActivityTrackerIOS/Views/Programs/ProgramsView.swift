@@ -1,13 +1,16 @@
+
 import SwiftUI
+import SwiftData
 
 struct ProgramsView: View {
 
     @Binding var selectedTab: AppTab
 
+    @State private var workouts: [Workout] = []
+
     @State private var showStrength = true
     @State private var showRunning = false
     @State private var showCombined = false
-
     @State private var recordingProgram: RunningProgram?
     @State private var isBuildingCombinedProgram = false
     @State private var combinedProgramBeingEdited: CombinedProgram?
@@ -28,7 +31,6 @@ struct ProgramsView: View {
             ScrollView {
 
                 VStack(spacing: 0) {
-
                     // MARK: - Program Type Filters
 
                     VStack(alignment: .leading, spacing: 12) {
@@ -125,6 +127,17 @@ struct ProgramsView: View {
                 }
             }
             .navigationTitle("Programs")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink {
+                        ExerciseBrowserView(workouts: workouts)
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                            .font(.title2)
+                            .foregroundStyle(Color(hex: "8c52ff"))
+                    }
+                }
+            }
         }
         .onAppear {
             combinedPrograms = CombinedProgramStore.load()

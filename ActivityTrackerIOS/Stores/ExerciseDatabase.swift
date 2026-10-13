@@ -11,19 +11,23 @@ final class ExerciseDatabase {
             forResource: "exercises",
             withExtension: "json"
         ) else {
-            print("Exercise database file not found")
+            print("❌ Exercise database file not found in app bundle")
             return
         }
 
         do {
             let data = try Data(contentsOf: url)
-            exercises = try JSONDecoder().decode(
-                [Exercise].self,
+
+            let response = try JSONDecoder().decode(
+                ExerciseDatabaseResponse.self,
                 from: data
             )
-            print("Loaded \(exercises.count) exercises")
+
+            exercises = response.exercises
+
+            print("✅ Loaded \(exercises.count) exercises")
         } catch {
-            print("Could not decode exercise database: \(error)")
+            print("❌ Could not decode exercise database: \(error)")
         }
     }
 
@@ -33,12 +37,15 @@ final class ExerciseDatabase {
     ) -> [Exercise] {
         return exercises.filter { exercise in
             let muscleText = (
-                [exercise.primaryMuscle] + exercise.secondaryMuscles
+                [exercise.primaryMuscle] + exercise.muscleGroups
             ).joined(separator: " ").lowercased()
 
-            let matchesMuscle = muscleText.contains(muscle.lowercased())
+            let matchesMuscle = muscleText.contains(
+                muscle.lowercased()
+            )
 
             let matchesEquipment: Bool
+
             if let equipment = equipment {
                 matchesEquipment = exercise.equipment.contains {
                     $0.localizedCaseInsensitiveContains(equipment)

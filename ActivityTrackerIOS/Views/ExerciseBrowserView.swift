@@ -1,7 +1,16 @@
+//
+//  ExerciseBrowserView.swift
+//  ActivityTrackerIOS
+//
+//  Created by Alexis Newell on 2026-10-12.
+//
+
+
 
 import SwiftUI
 
 struct ExerciseBrowserView: View {
+    let workouts: [Workout]
     @Environment(\.dismiss) private var dismiss
 
     @State private var searchText = ""
@@ -12,6 +21,48 @@ struct ExerciseBrowserView: View {
     @State private var showSaveAlert = false
     @State private var workoutName = "My Workout"
     @State private var savedMessage = ""
+    
+    private var personalizedExercises: [Exercise] {
+        let calendar = Calendar.current
+        let now = Date()
+
+        func score(_ exercise: Exercise) -> Int {
+            let matchingWorkouts = workouts.filter {
+                $0.exerciseName.localizedCaseInsensitiveCompare(
+                    exercise.name
+                ) == .orderedSame
+            }
+
+            let frequencyScore = matchingWorkouts.count * 10
+
+            let recentScore = matchingWorkouts.reduce(0) {
+                total, workout in
+
+                guard let daysAgo = calendar.dateComponents(
+                    [.day],
+                    from: calendar.startOfDay(for: workout.date),
+                    to: calendar.startOfDay(for: now)
+                ).day else {
+                    return total
+                }
+
+                return total + (daysAgo >= 0 && daysAgo <= 7 ? 15 : 0)
+            }
+
+            return frequencyScore + recentScore
+        }
+
+        return filteredExercises.sorted { first, second in
+            let firstScore = score(first)
+            let secondScore = score(second)
+
+            if firstScore != secondScore {
+                return firstScore > secondScore
+            }
+
+            return first.name.localizedCompare(second.name) == .orderedAscending
+        }
+    }
 
     private let muscles = [
         "All", "Chest", "Back", "Arms",
@@ -37,7 +88,7 @@ struct ExerciseBrowserView: View {
             let matchesSearch = query.isEmpty
                 || exercise.name.localizedCaseInsensitiveContains(query)
                 || exercise.primaryMuscle.localizedCaseInsensitiveContains(query)
-                || exercise.secondaryMuscles.contains {
+                || exercise.muscleGroups.contains {
                     $0.localizedCaseInsensitiveContains(query)
                 }
                 || exercise.equipment.contains {
@@ -45,7 +96,7 @@ struct ExerciseBrowserView: View {
                 }
 
             let muscleNames = (
-                [exercise.primaryMuscle] + exercise.secondaryMuscles
+                [exercise.primaryMuscle] + exercise.muscleGroups
             ).joined(separator: " ").lowercased()
 
             let matchesMuscle: Bool
@@ -119,7 +170,26 @@ struct ExerciseBrowserView: View {
             } else {
                 ScrollView {
                     LazyVStack(spacing: 10) {
-                        ForEach(filteredExercises) { exercise in
+                        if !workouts.isEmpty {
+                            let hasHistoryMatches = personalizedExercises.contains {
+                                exercise in
+
+                                workouts.contains {
+                                    $0.exerciseName.localizedCaseInsensitiveCompare(
+                                        exercise.name
+                                    ) == .orderedSame
+                                }
+                            }
+
+                            if hasHistoryMatches {
+                                Text("Based on Your History")
+                                    .font(.headline)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.top, 4)
+                            }
+                        }
+
+                        ForEach(personalizedExercises) { exercise in
                             exerciseCard(exercise)
                         }
                     }

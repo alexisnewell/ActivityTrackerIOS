@@ -1,4 +1,11 @@
-```swift
+//
+//  ChatBubble.swift
+//  ActivityTrackerIOS
+//
+//  Created by Alexis Newell on 2026-09-27.
+//
+
+
 import SwiftUI
 
 struct ChatBubble: View {
@@ -35,4 +42,3 @@ struct ChatBubble: View {
         }
     }
 }
-```
