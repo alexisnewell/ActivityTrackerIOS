@@ -1,6 +1,4 @@
 
-
-
 <table>
   <tr>
     <td><img src="https://github.com/user-attachments/assets/1779e93e-949c-4983-bb56-ee67121f0eff" width="180"></td>
