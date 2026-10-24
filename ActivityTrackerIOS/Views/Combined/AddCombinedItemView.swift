@@ -18,7 +18,6 @@ struct AddCombinedItemView: View {
     var body: some View {
         NavigationStack {
             List {
-                // MARK: - Strength Programs
 
                 Section("Strength") {
                     if strengthPrograms.isEmpty {
@@ -45,8 +44,6 @@ struct AddCombinedItemView: View {
                     }
                 }
 
-                // MARK: - Running Workouts
-
                 Section("Running") {
                     if runningWorkouts.isEmpty {
                         Text("No running workouts available")
@@ -71,8 +68,6 @@ struct AddCombinedItemView: View {
                         }
                     }
                 }
-
-                // MARK: - Rest
 
                 Section {
                     Button {

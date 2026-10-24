@@ -6,8 +6,6 @@
 //
 
 import SwiftUI
-
-
 struct WorkoutResultView: View {
 
     let program: Program

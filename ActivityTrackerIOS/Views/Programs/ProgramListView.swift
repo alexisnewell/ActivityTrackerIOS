@@ -17,8 +17,6 @@ struct ProgramListView: View {
 
         VStack(spacing: 0) {
 
-            // MARK: - Header
-
             HStack {
 
                 Text("Strength Programs")
@@ -39,8 +37,6 @@ struct ProgramListView: View {
             .padding(.vertical, 10)
 
             Divider()
-
-            // MARK: - Rows
 
             if programs.isEmpty {
 
@@ -103,8 +99,6 @@ struct ProgramListView: View {
         }
     }
 
-    // MARK: - Program Row
-
     private func programRow(_ program: Program) -> some View {
 
         VStack(alignment: .leading, spacing: 6) {
@@ -158,8 +152,6 @@ struct ProgramListView: View {
         .padding(.horizontal)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
-
-    // MARK: - Data
 
     private func loadPrograms() {
         programs = ProgramStore.load()

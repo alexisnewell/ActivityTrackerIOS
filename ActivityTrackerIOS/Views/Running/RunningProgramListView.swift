@@ -15,14 +15,10 @@ struct RunningProgramListView: View {
     var body: some View {
         VStack(spacing: 0) {
 
-            // MARK: - Header
-
             HStack {
                 Text("Running Programs")
                     .font(.headline)
-
                 Spacer()
-
                 Button {
                     showNewProgramSheet = true
                 } label: {
@@ -32,11 +28,7 @@ struct RunningProgramListView: View {
             }
             .padding(.horizontal)
             .padding(.vertical, 10)
-
             Divider()
-
-            // MARK: - Rows
-
             if programs.isEmpty {
                 Text("No running programs yet.\nTap + to create one.")
                     .multilineTextAlignment(.center)

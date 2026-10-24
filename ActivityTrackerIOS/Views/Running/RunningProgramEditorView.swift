@@ -35,13 +35,8 @@ struct RunningProgramEditorView: View {
     }
 
     var body: some View {
-
         NavigationStack {
-
             Form {
-
-                // MARK: - Program Name
-
                 Section("Program Name") {
 
                     TextField(
@@ -49,8 +44,6 @@ struct RunningProgramEditorView: View {
                         text: $name
                     )
                 }
-
-                // MARK: - Workouts
 
                 Section("Workouts") {
 
@@ -135,8 +128,6 @@ struct RunningProgramEditorView: View {
         }
     }
 
-    // MARK: - Workout Row
-
     private func workoutRow(
         _ workout: RunningWorkout
     ) -> some View {
@@ -159,8 +150,6 @@ struct RunningProgramEditorView: View {
         .padding(.vertical, 4)
     }
 
-    // MARK: - Delete
-
     private func deleteWorkout(
         at offsets: IndexSet
     ) {
@@ -168,9 +157,7 @@ struct RunningProgramEditorView: View {
             atOffsets: offsets
         )
     }
-
-    // MARK: - Save
-
+    
     private func saveProgram() {
 
         let program = RunningProgram(

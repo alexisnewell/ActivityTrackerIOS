@@ -105,8 +105,6 @@ struct CombinedProgramBuilderView: View {
         }
     }
 
-    // MARK: - Week label
-
     private var weekRangeLabel: String {
         let monday = weekStartDate
         let sunday = Calendar.current.date(byAdding: .day, value: 6, to: monday) ?? monday
@@ -114,8 +112,6 @@ struct CombinedProgramBuilderView: View {
         let format = Date.FormatStyle.dateTime.month(.abbreviated).day()
         return "\(monday.formatted(format)) – \(sunday.formatted(format))"
     }
-
-    // MARK: - Day Row
 
     private func dayRow(index: Int) -> some View {
 

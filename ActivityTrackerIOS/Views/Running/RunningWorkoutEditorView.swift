@@ -2,19 +2,13 @@
 //  RunningWorkoutEditorView.swift
 //  ActivityTrackerIOS
 //
-
 import SwiftUI
-
 struct RunningWorkoutEditorView: View {
-
     @Environment(\.dismiss) private var dismiss
-
     let existingWorkout: RunningWorkout?
     let onSave: (RunningWorkout) -> Void
-
     @State private var name: String
     @State private var intervals: [RunningInterval]
-
     @State private var repetitionsText = ""
     @State private var distanceText = ""
     @State private var durationMinutesText = ""
@@ -23,11 +17,9 @@ struct RunningWorkoutEditorView: View {
     @State private var paceSecondsText = ""
     @State private var recoveryMinutesText = ""
     @State private var recoverySecondsText = ""
-
     @State private var showInvalidAlert = false
     @State private var isScheduled: Bool
     @State private var scheduledDate: Date
-
     init(
         existingWorkout: RunningWorkout? = nil,
         onSave: @escaping (RunningWorkout) -> Void
@@ -102,8 +94,6 @@ struct RunningWorkoutEditorView: View {
                         .onDelete(perform: deleteInterval)
                     }
                 }
-
-                // MARK: - Add Interval
 
                 Section("Add Interval") {
 

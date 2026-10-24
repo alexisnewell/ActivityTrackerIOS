@@ -4,12 +4,10 @@
 //
 //  Created by Alexis Newell on 2026-08-15.
 //
-
 import CoreLocation
 import SwiftUI
 import CoreMotion
 import SwiftData
-
 struct ActivityTrackerView: View {
 
     @StateObject private var tracker = ActivityTracker()
@@ -75,7 +73,6 @@ struct ActivityTrackerView: View {
             Text(tracker.elapsedFormatted)
                 .font(.system(size: 56, weight: .bold, design: .rounded))
                 .monospacedDigit()
-
             HStack(spacing: 40) {
                 VStack {
                     Text("Steps").font(.caption).foregroundColor(.gray)
@@ -134,16 +131,13 @@ final class ActivityTracker: NSObject, ObservableObject {
     @Published var elapsedSeconds: Int = 0
     @Published var distanceMiles: Double = 0
     @Published var authorizationDenied = false
-
     private let pedometer = CMPedometer()
     private let locationManager = CLLocationManager()
     private var lastLocation: CLLocation?
     private var sessionStart = Date()
     private var timer: Timer?
-
     private(set) var splitSecondsByDistance: [String: Int] = [:]
     private var remainingDistances = StandardDistances.all
-
     override init() {
         super.init()
         locationManager.delegate = self
@@ -174,7 +168,6 @@ final class ActivityTracker: NSObject, ObservableObject {
         } else {
             locationManager.startUpdatingLocation()
         }
-
         if CMPedometer.isStepCountingAvailable() {
             pedometer.startUpdates(from: sessionStart) { [weak self] data, error in
                 guard let self, let data, error == nil else { return }

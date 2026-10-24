@@ -4,12 +4,9 @@
 //
 //  Created by Alexis Newell on 2026-08-01.
 //
-
 import SwiftUI
 import CoreMotion
 import SwiftData
-
-/// SwiftUI equivalent of MainActivity.java.
 struct StepsView: View {
     
     @StateObject private var motion = MotionTracker()

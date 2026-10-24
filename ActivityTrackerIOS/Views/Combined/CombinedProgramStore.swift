@@ -4,12 +4,6 @@
 //
 //  Created by Alexis Newell on 2026-09-09.
 //
-
-
-//
-//  CombinedProgramStore.swift
-//
-
 import Foundation
 
 enum CombinedProgramStore {

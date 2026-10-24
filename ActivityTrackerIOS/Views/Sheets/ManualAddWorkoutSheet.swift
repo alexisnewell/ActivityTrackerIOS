@@ -4,21 +4,15 @@
 //
 //  Created by Alexis Newell on 2026-08-05.
 //
-
-
 import SwiftUI
-
 struct ManualAddWorkoutSheet: View {
     @Environment(\.dismiss) private var dismiss
-
     let onSave: (Workout) -> Void
-
     @State private var name = ""
     @State private var setsText = ""
     @State private var repsText = ""
     @State private var weightText = ""
     @State private var showInvalidAlert = false
-
     var body: some View {
         NavigationStack {
             Form {

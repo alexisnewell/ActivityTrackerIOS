@@ -27,8 +27,6 @@ struct CombinedProgram: Identifiable, Codable {
         self.weekStartDate = CombinedProgram.mondayStartOfWeek(for: weekStartDate)
     }
 
-    // MARK: - Backward-compatible decoding
-
     private enum CodingKeys: String, CodingKey {
         case id, name, days, weekStartDate
     }
@@ -45,8 +43,6 @@ struct CombinedProgram: Identifiable, Codable {
         weekStartDate = CombinedProgram.mondayStartOfWeek(for: decodedDate ?? Date())
     }
 
-    // MARK: - Week math
-
     /// Returns midnight on the Monday of the week containing `date`.
     static func mondayStartOfWeek(for date: Date, calendar: Calendar = .current) -> Date {
         let startOfDay = calendar.startOfDay(for: date)
@@ -59,8 +55,6 @@ struct CombinedProgram: Identifiable, Codable {
     var weekEndDate: Date {
         Calendar.current.date(byAdding: .day, value: 6, to: weekStartDate) ?? weekStartDate
     }
-
-    // MARK: - Scheduled days
 
     /// One non-rest day from this plan, resolved to an actual calendar date.
     struct ScheduledDay {

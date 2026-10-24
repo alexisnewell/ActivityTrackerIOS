@@ -1,5 +1,4 @@
 import SwiftUI
-
 struct WorkoutCalendarView: View {
 
     let workouts: [Workout]
@@ -412,9 +411,6 @@ struct WorkoutCalendarView: View {
 
         return "?"
     }
-
-    // MARK: - Combined Programs (tied to one specific week)
-
     /// Finds combined-program days that fall on `date`, matched against each
     /// program's own `weekStartDate` — so a plan only appears during the
     /// single week it was scheduled for, not every week.

@@ -4,21 +4,15 @@
 //
 //  Created by Alexis Newell on 2026-08-05.
 //
-
-
 import SwiftUI
-
 struct LogExerciseSheet: View {
     @Environment(\.dismiss) private var dismiss
-
     let exercise: ProgramExercise
     let onSave: (Workout) -> Void
-
     @State private var setsText: String
     @State private var repsText: String
     @State private var weightText: String
     @State private var showInvalidAlert = false
-
     init(exercise: ProgramExercise, onSave: @escaping (Workout) -> Void) {
         self.exercise = exercise
         self.onSave = onSave

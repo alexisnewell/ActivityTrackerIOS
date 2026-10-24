@@ -4,11 +4,7 @@
 //
 //  Created by Alexis Newell on 2026-10-12.
 //
-
-
-
 import SwiftUI
-
 struct ExerciseBrowserView: View {
     let workouts: [Workout]
     @Environment(\.dismiss) private var dismiss

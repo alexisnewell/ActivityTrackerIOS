@@ -13,9 +13,6 @@ struct CombinedProgramListView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-
-            // MARK: - Header
-
             HStack {
                 Text("Combined Programs")
                     .font(.headline)
@@ -33,8 +30,6 @@ struct CombinedProgramListView: View {
             .padding(.vertical, 10)
 
             Divider()
-
-            // MARK: - Rows
 
             if programs.isEmpty {
                 ContentUnavailableView(
@@ -81,14 +76,10 @@ struct CombinedProgramListView: View {
         }
     }
 
-    // MARK: - Week label
-
     private func weekRangeLabel(for program: CombinedProgram) -> String {
         let format = Date.FormatStyle.dateTime.month(.abbreviated).day()
         return "\(program.weekStartDate.formatted(format)) – \(program.weekEndDate.formatted(format))"
     }
-
-    // MARK: - Day Row
 
     private func dayRow(index: Int, day: CombinedProgramDay) -> some View {
 
